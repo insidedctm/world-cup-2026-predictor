@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0d1b2a;
+    --navy-mid:   #1a2e45;
+    --navy-light: #243d57;
+    --forest:     #1e4d3b;
+    --forest-mid: #2a6651;
+    --forest-light: #35866a;
+    --gold:       #c9943a;
+    --gold-light: #e8b96a;
+    --cream:      #f5f0e8;
+    --cream-dark: #ede5d4;
+    --text:       #1a1a2e;
+    --text-mid:   #3d3d5c;
+    --text-light: #6b6b8a;
+    --rule:       #c9943a;
+    --win1:       #1d6fa4;
+    --draw:       #7a8fa6;
+    --win2:       #8b3a2a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead {
+    background: var(--navy);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 50%, rgba(30,77,59,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 85% 30%, rgba(201,148,58,0.12) 0%, transparent 60%);
+  }
+  .masthead-inner {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 72px 48px 56px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: end;
+  }
+  .masthead-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .masthead-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+  }
+  .masthead h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(42px, 5.5vw, 72px);
+    font-weight: 900;
+    line-height: 1.02;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+  }
+  .masthead h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+  .masthead-sub {
+    color: rgba(245,240,232,0.65);
+    font-size: 15px;
+    font-weight: 300;
+    margin-top: 20px;
+    max-width: 520px;
+    line-height: 1.65;
+  }
+  .masthead-meta {
+    text-align: right;
+    color: rgba(245,240,232,0.45);
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 2;
+    white-space: nowrap;
+  }
+  .masthead-meta strong {
+    color: var(--gold-light);
+    font-weight: 500;
+  }
+
+  /* ── NAV ── */
+  .nav-strip {
+    background: var(--navy-mid);
+    border-bottom: 1px solid rgba(201,148,58,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-strip ul {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+    list-style: none;
+    display: flex;
+    gap: 0;
+  }
+  .nav-strip a {
+    display: block;
+    padding: 14px 20px;
+    color: rgba(245,240,232,0.6);
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-strip a:hover {
+    color: var(--gold-light);
+    border-bottom-color: var(--gold);
+  }
+
+  /* ── LAYOUT ── */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  section {
+    padding: 80px 0 64px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  section:last-of-type { border-bottom: none; }
+
+  /* ── SECTION HEADERS ── */
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-number::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream-dark);
+    max-width: 60px;
+  }
+  h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 3.5vw, 42px);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--navy);
+    letter-spacing: -0.01em;
+    margin-bottom: 32px;
+  }
+  h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--navy);
+    margin: 40px 0 16px;
+  }
+  h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--forest-mid);
+    margin: 28px 0 10px;
+  }
+
+  /* ── PROSE ── */
+  p {
+    color: var(--text-mid);
+    margin-bottom: 18px;
+    max-width: 70ch;
+  }
+  p:last-child { margin-bottom: 0; }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  /* ── PULL QUOTE ── */
+  .pull-quote {
+    border-left: 4px solid var(--gold);
+    padding: 20px 28px;
+    margin: 40px 0;
+    background: rgba(201,148,58,0.06);
+    border-radius: 0 4px 4px 0;
+  }
+  .pull-quote p {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--navy);
+    line-height: 1.55;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  /* ── TWO-COLUMN ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .two-col-wide {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  /* ── EQUATION BLOCK ── */
+  .eq-block {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 32px 36px;
+    margin: 32px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .eq-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--forest-mid), var(--gold));
+  }
+  .eq-block .eq-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .eq-block .eq {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--cream);
+    line-height: 2.2;
+  }
+  .eq-block .eq .comment {
+    color: rgba(245,240,232,0.4);
+    font-size: 12px;
+  }
+  .eq-block .eq .highlight {
+    color: var(--gold-light);
+  }
+
+  /* ── PARAMETER TABLE ── */
+  .param-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .param-card {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: 6px;
+    padding: 20px 22px;
+    border-top: 3px solid var(--forest-mid);
+    transition: box-shadow 0.2s;
+  }
+  .param-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .param-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--forest-mid);
+    margin-bottom: 4px;
+  }
+  .param-desc {
+    font-size: 13.5px;
+    color: var(--text-mid);
+    line-height: 1.55;
+  }
+  .param-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--cream-dark);
+  }
+
+  /* ── DATA TABLE ── */
+  .data-table-wrap {
+    overflow-x: auto;
+    margin: 28px 0;
+    border-radius: 8px;
+    border: 1px solid var(--cream-dark);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  thead tr {
+    background: var(--navy);
+  }
+  thead th {
+    padding: 13px 16px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--cream-dark);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(30,77,59,0.04); }
+  tbody td {
+    padding: 11px 16px;
+    color: var(--text-mid);
+    vertical-align: middle;
+  }
+  .td-team {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .td-rank {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-light);
+  }
+  .td-source {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  .badge-wc   { background: rgba(29,111,164,0.15); color: #1d6fa4; }
+  .badge-qual { background: rgba(201,148,58,0.15); color: #9a6e1a; }
+
+  /* ── STAT PILLS ── */
+  .stat-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin: 32px 0;
+  }
+  .stat-pill {
+    background: var(--navy);
+    color: var(--cream);
+    border-radius: 6px;
+    padding: 18px 24px;
+    min-width: 130px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-pill::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+  .stat-pill .stat-n {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--gold-light);
+    display: block;
+  }
+  .stat-pill .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.55);
+    margin-top: 6px;
+    display: block;
+  }
+
+  /* ── MATCH PREDICTION BARS ── */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    margin-top: 32px;
+  }
+  .group-card {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .group-header {
+    background: var(--navy-mid);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .group-letter {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--gold-light);
+    line-height: 1;
+    width: 32px;
+    flex-shrink: 0;
+  }
+  .group-teams-list {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(245,240,232,0.55);
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+  }
+  .match-list { padding: 8px 0; }
+  .match-row {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .match-row:last-child { border-bottom: none; }
+  .match-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-light);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .match-names {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 7px;
+    gap: 8px;
+  }
+  .match-team {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+  .match-team.right { text-align: right; }
+  .match-vs {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-light);
+    flex-shrink: 0;
+    padding: 0 6px;
+  }
+  .prob-bar {
+    height: 20px;
+    display: flex;
+    border-radius: 3px;
+    overflow: hidden;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .prob-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 500;
+    font-size: 10px;
+    transition: opacity 0.15s;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .prob-seg:hover { opacity: 0.85; }
+  .seg-w1 { background: var(--win1); }
+  .seg-draw { background: var(--draw); }
+  .seg-w2 { background: var(--win2); }
+
+  /* ── CAVEATS ── */
+  .caveat-list {
+    list-style: none;
+    margin: 24px 0;
+  }
+  .caveat-list li {
+    display: flex;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--cream-dark);
+    align-items: flex-start;
+  }
+  .caveat-list li:last-child { border-bottom: none; }
+  .caveat-num {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 28px;
+    margin-top: 2px;
+  }
+  .caveat-text {
+    font-size: 14.5px;
+    color: var(--text-mid);
+    line-height: 1.65;
+    max-width: 65ch;
+  }
+  .caveat-text strong { color: var(--text); }
+
+  /* ── PIPELINE FLOW ── */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 36px 0;
+    overflow-x: auto;
+  }
+  .pipeline-step {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-right: none;
+    padding: 22px 22px;
+    flex: 1;
+    min-width: 130px;
+    position: relative;
+  }
+  .pipeline-step:last-child { border-right: 1px solid var(--cream-dark); border-radius: 0 6px 6px 0; }
+  .pipeline-step:first-child { border-radius: 6px 0 0 6px; }
+  .pipeline-step::after {
+    content: '→';
+    position: absolute;
+    right: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 18px;
+    z-index: 2;
+  }
+  .pipeline-step:last-child::after { display: none; }
+  .pipe-n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    margin-bottom: 8px;
+  }
+  .pipe-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .pipe-desc {
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.5;
+  }
+
+  /* ── RANKING BARS ── */
+  .ranking-chart {
+    margin: 24px 0;
+  }
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(237,229,212,0.7);
+  }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-team {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    width: 130px;
+    flex-shrink: 0;
+  }
+  .rank-bar-wrap {
+    flex: 1;
+    height: 12px;
+    background: var(--cream-dark);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .rank-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--forest-mid), var(--forest-light));
+    transition: width 1s ease;
+  }
+  .rank-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-light);
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .rank-prior {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--forest-mid);
+    width: 52px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    padding: 48px 0;
+    margin-top: 0;
+  }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .footer-brand {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cream);
+  }
+  .footer-brand span { color: var(--gold-light); font-style: italic; }
+  .footer-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(245,240,232,0.35);
+    line-height: 1.9;
+    text-align: right;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 800px) {
+    .masthead-inner { grid-template-columns: 1fr; padding: 48px 24px 40px; }
+    .masthead-meta { display: none; }
+    .page { padding: 0 24px; }
+    .nav-strip ul { padding: 0 16px; gap: 0; overflow-x: auto; }
+    .two-col, .two-col-wide { grid-template-columns: 1fr; gap: 32px; }
+    .groups-grid { grid-template-columns: 1fr; }
+    .param-grid { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipeline-step { border-right: 1px solid var(--cream-dark); border-bottom: none; border-radius: 0; }
+    .pipeline-step:last-child { border-radius: 0 0 6px 6px; }
+    .pipeline-step:first-child { border-radius: 6px 6px 0 0; }
+    .pipeline-step::after { content: '↓'; right: auto; top: auto; bottom: -14px; left: 50%; transform: translateX(-50%); }
+  }
+
+  /* ── ANIMATION ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.6s ease both; }
+  .fade-up:nth-child(2) { animation-delay: 0.1s; }
+  .fade-up:nth-child(3) { animation-delay: 0.2s; }
+  .fade-up:nth-child(4) { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">Bayesian Football Analytics</div>
+      <h1>World Cup 2026<br><em>Predictor</em></h1>
+      <p class="masthead-sub">A hierarchical Bayesian model for estimating match probabilities across all 72 group-stage fixtures of the 2026 FIFA World Cup, built on 2022 tournament results, 2026 qualifying data, and FIFA rankings as a prior.</p>
+    </div>
+    <div class="masthead-meta">
+      <strong>Model</strong><br>Gelman (2014) Hierarchical<br><br>
+      <strong>Likelihood</strong><br>Student-t(ν=7)<br><br>
+      <strong>Prior</strong><br>FIFA Rankings (Apr 2025)<br><br>
+      <strong>Training data</strong><br>110 matches<br><br>
+      <strong>Chains × Samples</strong><br>4 × 2,000<br><br>
+      <strong>Software</strong><br>PyStan 3 / Stan
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-strip">
+  <ul>
+    <li><a href="#background">Background</a></li>
+    <li><a href="#approach">Approach</a></li>
+    <li><a href="#model">Model</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#predictions">Predictions</a></li>
+    <li><a href="#caveats">Caveats</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+<!-- ─────────────────────────────────────────── BACKGROUND -->
+<section id="background">
+  <div class="section-number">01 &mdash; Background</div>
+  <h2>From a 2014 blog post<br>to 48 teams</h2>
+
+  <div class="two-col-wide">
+    <div>
+      <p>In July 2014, statistician <strong>Andrew Gelman</strong> published a pair of blog posts on <em>Statistical Modeling, Causal Inference, and Social Statistics</em> in which he fitted a simple Bayesian hierarchical model to the ongoing FIFA World Cup in Brazil. The goal was modest: use the scores of completed group-stage games to estimate each team's relative ability, then generate probabilistic predictions for the remaining fixtures.</p>
+
+      <p>The model was elegant. Score differences between teams were modelled as draws from a Student-t distribution centred on the difference in latent team abilities. Each team's ability was in turn drawn from a normal distribution informed by FiveThirtyEight's Soccer Power Index — a prior that encoded pre-tournament knowledge about team strength. The non-centred parameterisation kept the sampler efficient. Stan did the rest.</p>
+
+      <div class="pull-quote">
+        <p>"The key insight is that each game is an observation of the difference in abilities, not of the abilities themselves. The prior pulls everything toward the rankings; the data updates away from it."</p>
+      </div>
+
+      <p>The original implementation contained a subtle bug — the predictive intervals were miscalibrated — which Gelman corrected in a follow-up post. The corrected model showed that roughly 5% of actual score differences fell outside the 95% posterior predictive intervals: good calibration.</p>
+
+      <p>This project adapts Gelman's model for the 2026 World Cup, which is considerably larger (48 teams, 12 groups, 72 group games) and takes place over eleven years after the original. FIFA rankings replace the Soccer Power Index as the prior, and the training data combines the 2022 World Cup results with 2026 qualifying matches between qualified teams.</p>
+    </div>
+
+    <div>
+      <h4>Modelling pipeline</h4>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="pipe-n">STEP 01</div>
+          <div class="pipe-title">FIFA Rankings</div>
+          <div class="pipe-desc">Rescaled to [−1, 1] as a prior on team ability</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipe-n">STEP 02</div>
+          <div class="pipe-title">Match Data</div>
+          <div class="pipe-desc">2022 WC + 2026 qualifying, qualified teams only</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipe-n">STEP 03</div>
+          <div class="pipe-title">Stan / MCMC</div>
+          <div class="pipe-desc">4 chains × 2,000 samples, HMC sampler</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipe-n">STEP 04</div>
+          <div class="pipe-title">Predictions</div>
+          <div class="pipe-desc">Posterior predictive samples → win/draw/loss %</div>
+        </div>
+      </div>
+
+      <h4>Key numbers</h4>
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-n">48</span><span class="stat-label">Teams</span></div>
+        <div class="stat-pill"><span class="stat-n">72</span><span class="stat-label">Group games</span></div>
+        <div class="stat-pill"><span class="stat-n">110</span><span class="stat-label">Training matches</span></div>
+        <div class="stat-pill"><span class="stat-n">8k</span><span class="stat-label">MCMC samples</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── APPROACH -->
+<section id="approach">
+  <div class="section-number">02 &mdash; Approach</div>
+  <h2>Design decisions</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>Prior: FIFA Rankings</h3>
+      <p>Gelman's original model used FiveThirtyEight's Soccer Power Index, treating it as a rank-ordered prior on team ability. We substitute the <strong>official FIFA World Rankings as of April 2025</strong> — the most recent update before the tournament — which serves an equivalent function.</p>
+      <p>The raw rank numbers (1 = strongest) are inverted so that a higher numerical value corresponds to a stronger team, then rescaled to the interval [−1, 1] using Gelman's two-standard-deviation standardisation. The rescaling preserves the ordinal structure while putting the prior on the same scale as the likelihood.</p>
+      <p>One acknowledged limitation is that FIFA rankings are themselves computed from recent international results, some of which overlap with the qualifying matches used as training data. This means the prior and the likelihood are not fully independent — there is a modest double-counting of signal. For the purposes of this exercise we accept this and note it as a caveat.</p>
+
+      <h3>Output: win / draw / loss</h3>
+      <p>Gelman's model produces a continuous posterior predictive distribution over score differences, not discrete outcomes. To convert to win/draw/loss probabilities, we sample from the posterior predictive and apply a <strong>±0.5 goal threshold</strong>:</p>
+      <ul style="margin: 12px 0 12px 20px; color: var(--text-mid); font-size: 14.5px; line-height: 2;">
+        <li>Score diff &gt; +0.5 → Team 1 wins</li>
+        <li>−0.5 ≤ Score diff ≤ +0.5 → Draw</li>
+        <li>Score diff &lt; −0.5 → Team 2 wins</li>
+      </ul>
+      <p>This approximation understates true draw frequency (football has a systematic excess of 0–0 and 1–1 draws versus what a continuous distribution predicts), but it is simple, transparent, and ensures the three probabilities always sum to exactly 100%.</p>
+    </div>
+
+    <div>
+      <h3>Gelman convention</h3>
+      <p>The model always treats the <strong>stronger team (lower FIFA rank number) as Team 1</strong>, regardless of fixture order. This convention ensures that the sign of the score difference is consistently interpretable: positive means the favourite won, negative means the upset. Probabilities are then reported back in fixture order.</p>
+
+      <h3>Data filtering</h3>
+      <p>The qualifying games are filtered to pairs where <em>both</em> teams are among the 32 48 qualified nations. This avoids the minnow problem: a 7–0 win by Germany over a non-qualifying nation would artificially inflate Germany's estimated ability. By only including matched qualified pairs, every observation is informative about the relative abilities of teams we actually care about.</p>
+      <p>OFC qualifying was excluded on the basis that Oceania produced only a single qualifier (New Zealand) via an intercontinental play-off, with no competitive group-stage matches between multiple qualified teams.</p>
+
+      <h3>Neutral venue assumption</h3>
+      <p>Home advantage is not modelled. World Cup group games are played at neutral venues, so no correction is needed there. Qualifying games do have a home team, and ignoring this introduces a modest bias — but the effect on ability estimates is diluted by the relatively small number of qualifying games per team in the dataset.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── MODEL -->
+<section id="model">
+  <div class="section-number">03 &mdash; Model</div>
+  <h2>The statistical model</h2>
+
+  <div class="two-col-wide">
+    <div>
+      <h3>Likelihood</h3>
+      <p>For each game <em>k</em>, let <strong>y<sub>k</sub></strong> be the score difference (goals by the favourite minus goals by the underdog). The likelihood is a Student-t distribution with fixed degrees of freedom ν = 7:</p>
+
+      <div class="eq-block">
+        <div class="eq-label">Equation 1 — Likelihood</div>
+        <div class="eq">
+          y<sub>k</sub> &sim; <span class="highlight">t<sub>7</sub></span>( a<sub>i(k)</sub> &minus; a<sub>j(k)</sub>,  &sigma;<sub>y</sub> )<br>
+          <span class="comment">// for each game k, fave i vs. underdog j</span>
+        </div>
+      </div>
+
+      <p>The Student-t with ν = 7 has heavier tails than a normal distribution, accommodating the occasional dramatic scoreline (e.g. 7–1) without treating it as an impossibility. The degrees of freedom are fixed rather than estimated — a deliberate choice following Gelman's original to keep the model simple and identifiable.</p>
+
+      <h3>Prior on team ability</h3>
+      <p>Each team's latent ability <em>a<sub>i</sub></em> is modelled as drawn from a normal distribution whose mean is a linear function of the FIFA ranking prior score <em>s<sub>i</sub></em>:</p>
+
+      <div class="eq-block">
+        <div class="eq-label">Equation 2 — Ability prior</div>
+        <div class="eq">
+          a<sub>i</sub> &sim; <span class="highlight">Normal</span>( b &sdot; s<sub>i</sub>,  &sigma;<sub>a</sub> )<br>
+          <span class="comment">// s_i is the rescaled FIFA ranking score for team i</span>
+        </div>
+      </div>
+
+      <p>The parameter <strong>b</strong> captures how much weight to assign to the prior. If the FIFA rankings contain no information about true ability, the posterior of <em>b</em> should concentrate near zero. In practice the model found <strong>b ≈ 1.24</strong>, indicating the rankings are genuinely informative.</p>
+
+      <h3>Non-centred parameterisation</h3>
+      <p>To improve sampler efficiency — especially for teams with few or no observations, where the geometry of the posterior can be problematic — the model uses a non-centred form:</p>
+
+      <div class="eq-block">
+        <div class="eq-label">Equation 3 — Non-centred form (as implemented in Stan)</div>
+        <div class="eq">
+          ã<sub>i</sub> &sim; <span class="highlight">Normal</span>(0, 1)<br>
+          a<sub>i</sub> = b &sdot; s<sub>i</sub> + &sigma;<sub>a</sub> &sdot; ã<sub>i</sub><br>
+          <span class="comment">// ã_i is the standardised latent ability</span>
+        </div>
+      </div>
+
+      <h3>Posterior predictive sampling</h3>
+      <p>For each fixture, win/draw/loss probabilities are computed by drawing posterior predictive samples of the score difference and classifying them according to the ±0.5 threshold. With 8,000 posterior samples, each probability is estimated to within roughly ±0.5 percentage points (Monte Carlo standard error).</p>
+    </div>
+
+    <div>
+      <h4>Model parameters</h4>
+      <div class="param-grid">
+        <div class="param-card">
+          <div class="param-name">b</div>
+          <div class="param-desc">Weight on the FIFA ranking prior. Positive values mean rankings predict ability; b = 0 means the prior is ignored.</div>
+          <div class="param-value">Posterior mean ≈ 1.24</div>
+        </div>
+        <div class="param-card">
+          <div class="param-name">σ<sub>a</sub></div>
+          <div class="param-desc">Residual spread in team abilities after accounting for the ranking prior. Captures heterogeneity the rankings miss.</div>
+          <div class="param-value">Estimated from data</div>
+        </div>
+        <div class="param-card">
+          <div class="param-name">σ<sub>y</sub></div>
+          <div class="param-desc">Observational noise: unexplained variance in goal differences given known team abilities. Roughly 1.3 goals.</div>
+          <div class="param-value">Posterior mean ≈ 1.33</div>
+        </div>
+        <div class="param-card">
+          <div class="param-name">a<sub>i</sub></div>
+          <div class="param-desc">Latent relative ability of team i. Higher values mean stronger teams. One parameter per team (48 total).</div>
+          <div class="param-value">48 team-level params</div>
+        </div>
+      </div>
+
+      <h4>Calibration</h4>
+      <p style="font-size: 14px;">On the 110 training games, only <strong>3.6%</strong> of actual score differences fell outside the 95% posterior predictive interval. A perfectly calibrated model would produce exactly 5%. This slight over-coverage suggests the model's intervals are marginally conservative — a safe direction for prediction.</p>
+
+      <h4>Implementation</h4>
+      <p style="font-size: 14px;">The model is implemented in <strong>Stan</strong> (via PyStan 3) and sampled using Hamiltonian Monte Carlo with the No-U-Turn Sampler (NUTS). Four independent chains of 2,000 samples each (after 1,000 warmup) were run, giving 8,000 effective posterior draws. No divergences or R-hat warnings were observed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── DATA -->
+<section id="data">
+  <div class="section-number">04 &mdash; Data</div>
+  <h2>Training data &amp; rankings</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>Match results</h3>
+      <p>Match results were sourced from the <strong>martj42/international_results</strong> repository on GitHub — a continuously updated, community-maintained dataset of international football results from 1872 to the present. Two subsets were extracted:</p>
+
+      <p><strong>2022 FIFA World Cup</strong> (Qatar): all 46 group-stage games where both participants are among the 48 qualified nations for 2026. The 2022 WC provides the only available data for many UEFA and CONCACAF teams that do not play each other in confederation qualifying.</p>
+
+      <p><strong>2026 FIFA World Cup qualifying</strong>: games played after the 2022 WC final (18 December 2022), filtered to matches where both the home and away team are among the 48 qualified nations. This yields 64 games, concentrated in CONMEBOL (South America) and AFC (Asia), where qualified teams frequently play each other in round-robin qualifying groups.</p>
+
+      <div class="data-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Source</th><th>Games</th><th>Confederations covered</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="badge badge-wc">2022 WC</span></td><td>46</td><td>All (global)</td></tr>
+            <tr><td><span class="badge badge-qual">2026 Qualifying</span></td><td>64</td><td>CONMEBOL, AFC, some UEFA</td></tr>
+            <tr><td style="font-weight:600;">Total</td><td style="font-weight:600;">110</td><td style="color:var(--text-light); font-size:13px;">Qualified-team pairs only</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Coverage gaps</h3>
+      <p>Nine of the 48 qualified teams have <strong>zero games</strong> in the training set against other qualified opponents. Their ability estimates are driven entirely by the FIFA ranking prior:</p>
+      <p style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text-light); background: var(--cream-dark); padding: 14px 18px; border-radius: 5px; line-height: 2;">Algeria &bull; Cape Verde &bull; Egypt &bull; Ivory Coast &bull; New Zealand &bull; Norway &bull; Panama &bull; Scotland &bull; South Africa</p>
+      <p>For these teams, predictions are essentially the prior — a reflection of their FIFA ranking relative to opponents. Treat these predictions with lower confidence than those for data-rich teams like Argentina (16 games), Brazil (13), or Uruguay (13).</p>
+    </div>
+
+    <div>
+      <h3>FIFA Rankings (April 2025)</h3>
+      <p>Rankings are inverted and rescaled using the formula:</p>
+      <div class="eq-block" style="padding: 20px 24px;">
+        <div class="eq-label">Prior score rescaling</div>
+        <div class="eq" style="font-size: 13px;">
+          s<sub>i</sub> = (max(r) &minus; r<sub>i</sub> + 1 &minus; <span style="text-decoration:overline">x</span>) / (2 &sdot; SD(x))
+        </div>
+      </div>
+      <p>where <em>r<sub>i</sub></em> is team <em>i</em>'s FIFA rank. This places all teams on a [−1.5, +0.7] scale with the average qualified team at zero.</p>
+
+      <h4>Top 16 qualified nations by ranking</h4>
+      <div class="ranking-chart" id="rankingChart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── PREDICTIONS -->
+<section id="predictions">
+  <div class="section-number">05 &mdash; Predictions</div>
+  <h2>Group stage predictions</h2>
+
+  <p>For each of the 72 group-stage fixtures, win/draw/loss probabilities are shown as a stacked bar. Blue = Team 1 wins, grey = draw, red = Team 2 wins. Percentages always sum to 100.</p>
+  <p style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-light); margin-bottom: 32px;">
+    Threshold: score diff &gt; +0.5 → Team 1 win &nbsp;&bull;&nbsp; |score diff| ≤ 0.5 → Draw &nbsp;&bull;&nbsp; score diff &lt; −0.5 → Team 2 win
+  </p>
+
+  <div class="groups-grid" id="groupsGrid"></div>
+</section>
+
+<!-- ─────────────────────────────────────────── CAVEATS -->
+<section id="caveats">
+  <div class="section-number">06 &mdash; Caveats</div>
+  <h2>Known limitations</h2>
+  <p>This model is a faithful adaptation of an eleven-year-old blog post applied to a significantly larger tournament. It makes several deliberate simplifications that any user of the predictions should understand.</p>
+
+  <ul class="caveat-list">
+    <li>
+      <span class="caveat-num">1</span>
+      <span class="caveat-text"><strong>Draws are structurally underestimated.</strong> The ±0.5 threshold on a continuous Student-t distribution produces draw probabilities that are lower than empirical football rates (roughly 22–27%). Real football has a systematic excess of 0–0 and 1–1 results versus what pure continuous prediction implies. A bivariate Poisson model with a Dixon-Coles low-score correction would handle this more naturally.</span>
+    </li>
+    <li>
+      <span class="caveat-num">2</span>
+      <span class="caveat-text"><strong>Nine teams are prior-only.</strong> Algeria, Cape Verde, Egypt, Ivory Coast, New Zealand, Norway, Panama, Scotland, and South Africa have no head-to-head games against other 2026 qualifiers in the training set. Their predictions are pure expressions of FIFA ranking, with no learning from match outcomes.</span>
+    </li>
+    <li>
+      <span class="caveat-num">3</span>
+      <span class="caveat-text"><strong>Prior and likelihood partially overlap.</strong> FIFA rankings are computed from recent international results, some of which are also in the training set. This double-counting modestly over-informs the prior. An independent prior (such as club-ELO ratings) would be cleaner.</span>
+    </li>
+    <li>
+      <span class="caveat-num">4</span>
+      <span class="caveat-text"><strong>Home advantage is not modelled.</strong> Qualifying games include a designated home team. Ignoring this introduces a small bias into ability estimates, though its effect is diluted by the limited number of qualifying games per team.</span>
+    </li>
+    <li>
+      <span class="caveat-num">5</span>
+      <span class="caveat-text"><strong>No temporal decay.</strong> A qualifying result from September 2023 is given equal weight to one from March 2026. Applying an exponential decay function — down-weighting older matches — would allow the model to be more sensitive to recent form changes.</span>
+    </li>
+    <li>
+      <span class="caveat-num">6</span>
+      <span class="caveat-text"><strong>Score difference, not goals.</strong> Modelling the difference rather than individual goal counts loses information about offensive and defensive quality separately, and loses the integer structure of scores. A Poisson or negative-binomial model on goals would be a natural next step.</span>
+    </li>
+  </ul>
+</section>
+
+</div><!-- /page -->
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">World Cup 2026 <span>Predictor</span></div>
+    <div class="footer-meta">
+      Model: Gelman (2014) hierarchical Student-t &bull; Prior: FIFA Rankings Apr 2025<br>
+      Data: martj42/international_results (GitHub) &bull; Sampler: Stan / NUTS<br>
+      110 training games &bull; 8,000 posterior samples &bull; 72 group-stage predictions
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const rankings = {
+  "Argentina":1,"Spain":2,"France":3,"England":4,"Brazil":5,
+  "Belgium":6,"Netherlands":7,"Portugal":8,"Colombia":9,"Germany":12,
+  "Croatia":13,"Uruguay":14,"Mexico":15,"United States":16,"Morocco":17,
+  "Japan":18,"Senegal":19,"Iran":20,"Switzerland":21,"Ecuador":23,
+  "Australia":24,"South Korea":25,"Canada":26,"Turkey":27,"Austria":28,
+  "Czech Republic":29,"Norway":31,"Egypt":32,"Algeria":34,"Sweden":35,
+  "Paraguay":37,"Tunisia":38,"Scotland":39,"Iraq":40,"South Africa":41,
+  "Jordan":42,"Saudi Arabia":43,"Ghana":44,"Bosnia and Herzegovina":45,
+  "Panama":46,"Qatar":47,"Ivory Coast":48,"DR Congo":51,
+  "Uzbekistan":58,"Cape Verde":62,"Curaçao":82,"New Zealand":95,"Haiti":100,
+};
+
+const predictions = [
+  {group:"A",date:"11 Jun",team1:"Mexico",team2:"South Africa",w1:55.1,d:23.5,w2:21.3},
+  {group:"A",date:"11 Jun",team1:"South Korea",team2:"Czech Republic",w1:41.6,d:26.4,w2:32.1},
+  {group:"A",date:"18 Jun",team1:"Czech Republic",team2:"South Africa",w1:43.7,d:26.4,w2:29.9},
+  {group:"A",date:"18 Jun",team1:"Mexico",team2:"South Korea",w1:41.7,d:27.6,w2:30.7},
+  {group:"A",date:"24 Jun",team1:"Mexico",team2:"Czech Republic",w1:48.0,d:25.9,w2:26.1},
+  {group:"A",date:"24 Jun",team1:"South Africa",team2:"South Korea",w1:24.1,d:26.0,w2:49.8},
+  {group:"B",date:"12 Jun",team1:"Canada",team2:"Bosnia and Herzegovina",w1:47.6,d:26.2,w2:26.3},
+  {group:"B",date:"13 Jun",team1:"Qatar",team2:"Switzerland",w1:17.6,d:21.9,w2:60.6},
+  {group:"B",date:"18 Jun",team1:"Switzerland",team2:"Bosnia and Herzegovina",w1:55.4,d:23.8,w2:20.7},
+  {group:"B",date:"18 Jun",team1:"Canada",team2:"Qatar",w1:53.7,d:23.9,w2:22.4},
+  {group:"B",date:"24 Jun",team1:"Canada",team2:"Switzerland",w1:30.7,d:26.1,w2:43.2},
+  {group:"B",date:"24 Jun",team1:"Bosnia and Herzegovina",team2:"Qatar",w1:41.3,d:26.9,w2:31.8},
+  {group:"C",date:"13 Jun",team1:"Brazil",team2:"Morocco",w1:41.7,d:27.2,w2:31.2},
+  {group:"C",date:"13 Jun",team1:"Haiti",team2:"Scotland",w1:8.3,d:12.9,w2:78.8},
+  {group:"C",date:"19 Jun",team1:"Scotland",team2:"Morocco",w1:21.4,d:23.8,w2:54.8},
+  {group:"C",date:"19 Jun",team1:"Brazil",team2:"Haiti",w1:89.1,d:6.9,w2:4.0},
+  {group:"C",date:"24 Jun",team1:"Scotland",team2:"Brazil",w1:17.9,d:21.7,w2:60.4},
+  {group:"C",date:"24 Jun",team1:"Morocco",team2:"Haiti",w1:87.5,d:8.1,w2:4.4},
+  {group:"D",date:"12 Jun",team1:"United States",team2:"Paraguay",w1:47.8,d:26.2,w2:26.0},
+  {group:"D",date:"13 Jun",team1:"Australia",team2:"Turkey",w1:39.1,d:27.0,w2:33.9},
+  {group:"D",date:"19 Jun",team1:"United States",team2:"Australia",w1:41.0,d:27.9,w2:31.1},
+  {group:"D",date:"19 Jun",team1:"Turkey",team2:"Paraguay",w1:38.8,d:27.5,w2:33.7},
+  {group:"D",date:"25 Jun",team1:"United States",team2:"Turkey",w1:45.0,d:27.2,w2:27.8},
+  {group:"D",date:"25 Jun",team1:"Paraguay",team2:"Australia",w1:31.5,d:26.7,w2:41.8},
+  {group:"E",date:"14 Jun",team1:"Germany",team2:"Curaçao",w1:80.2,d:12.2,w2:7.7},
+  {group:"E",date:"14 Jun",team1:"Ivory Coast",team2:"Ecuador",w1:19.0,d:23.1,w2:58.0},
+  {group:"E",date:"20 Jun",team1:"Germany",team2:"Ivory Coast",w1:63.1,d:20.2,w2:16.8},
+  {group:"E",date:"20 Jun",team1:"Ecuador",team2:"Curaçao",w1:77.4,d:13.4,w2:9.1},
+  {group:"E",date:"25 Jun",team1:"Curaçao",team2:"Ivory Coast",w1:18.0,d:21.8,w2:60.2},
+  {group:"E",date:"25 Jun",team1:"Ecuador",team2:"Germany",w1:32.6,d:27.0,w2:40.4},
+  {group:"F",date:"14 Jun",team1:"Netherlands",team2:"Japan",w1:45.8,d:26.1,w2:28.1},
+  {group:"F",date:"14 Jun",team1:"Sweden",team2:"Tunisia",w1:34.6,d:27.3,w2:38.1},
+  {group:"F",date:"20 Jun",team1:"Netherlands",team2:"Sweden",w1:62.3,d:21.5,w2:16.2},
+  {group:"F",date:"20 Jun",team1:"Tunisia",team2:"Japan",w1:23.5,d:24.2,w2:52.3},
+  {group:"F",date:"25 Jun",team1:"Japan",team2:"Sweden",w1:53.9,d:24.5,w2:21.6},
+  {group:"F",date:"25 Jun",team1:"Tunisia",team2:"Netherlands",w1:17.2,d:21.1,w2:61.6},
+  {group:"G",date:"15 Jun",team1:"Belgium",team2:"Egypt",w1:54.5,d:24.1,w2:21.4},
+  {group:"G",date:"15 Jun",team1:"Iran",team2:"New Zealand",w1:81.2,d:11.9,w2:6.9},
+  {group:"G",date:"21 Jun",team1:"Belgium",team2:"Iran",w1:50.2,d:25.1,w2:24.7},
+  {group:"G",date:"21 Jun",team1:"New Zealand",team2:"Egypt",w1:8.3,d:13.0,w2:78.7},
+  {group:"G",date:"26 Jun",team1:"Egypt",team2:"Iran",w1:32.3,d:27.5,w2:40.2},
+  {group:"G",date:"26 Jun",team1:"New Zealand",team2:"Belgium",w1:4.9,d:8.2,w2:86.8},
+  {group:"H",date:"15 Jun",team1:"Spain",team2:"Cape Verde",w1:76.7,d:14.5,w2:8.8},
+  {group:"H",date:"15 Jun",team1:"Saudi Arabia",team2:"Uruguay",w1:19.6,d:23.4,w2:57.0},
+  {group:"H",date:"21 Jun",team1:"Spain",team2:"Saudi Arabia",w1:65.2,d:19.9,w2:14.9},
+  {group:"H",date:"21 Jun",team1:"Uruguay",team2:"Cape Verde",w1:70.7,d:17.4,w2:11.9},
+  {group:"H",date:"26 Jun",team1:"Cape Verde",team2:"Saudi Arabia",w1:23.3,d:24.8,w2:51.9},
+  {group:"H",date:"26 Jun",team1:"Uruguay",team2:"Spain",w1:28.5,d:26.9,w2:44.6},
+  {group:"I",date:"16 Jun",team1:"France",team2:"Senegal",w1:52.5,d:24.7,w2:22.7},
+  {group:"I",date:"16 Jun",team1:"Iraq",team2:"Norway",w1:29.8,d:26.7,w2:43.5},
+  {group:"I",date:"22 Jun",team1:"France",team2:"Iraq",w1:65.9,d:20.2,w2:13.9},
+  {group:"I",date:"22 Jun",team1:"Norway",team2:"Senegal",w1:29.3,d:26.9,w2:43.7},
+  {group:"I",date:"26 Jun",team1:"Norway",team2:"France",w1:18.1,d:23.2,w2:58.7},
+  {group:"I",date:"26 Jun",team1:"Senegal",team2:"Iraq",w1:51.6,d:25.4,w2:22.9},
+  {group:"J",date:"16 Jun",team1:"Argentina",team2:"Algeria",w1:61.2,d:22.0,w2:16.9},
+  {group:"J",date:"16 Jun",team1:"Austria",team2:"Jordan",w1:47.4,d:27.1,w2:25.5},
+  {group:"J",date:"22 Jun",team1:"Argentina",team2:"Austria",w1:56.0,d:23.3,w2:20.7},
+  {group:"J",date:"22 Jun",team1:"Jordan",team2:"Algeria",w1:29.9,d:26.2,w2:44.0},
+  {group:"J",date:"27 Jun",team1:"Algeria",team2:"Austria",w1:31.8,d:26.3,w2:41.8},
+  {group:"J",date:"27 Jun",team1:"Jordan",team2:"Argentina",w1:13.4,d:18.6,w2:68.0},
+  {group:"K",date:"17 Jun",team1:"Portugal",team2:"DR Congo",w1:68.6,d:18.2,w2:13.2},
+  {group:"K",date:"17 Jun",team1:"Uzbekistan",team2:"Colombia",w1:13.7,d:18.6,w2:67.8},
+  {group:"K",date:"23 Jun",team1:"Portugal",team2:"Uzbekistan",w1:70.4,d:18.2,w2:11.4},
+  {group:"K",date:"23 Jun",team1:"Colombia",team2:"DR Congo",w1:66.7,d:19.3,w2:14.0},
+  {group:"K",date:"27 Jun",team1:"Colombia",team2:"Portugal",w1:34.4,d:27.1,w2:38.4},
+  {group:"K",date:"27 Jun",team1:"DR Congo",team2:"Uzbekistan",w1:38.9,d:27.1,w2:34.1},
+  {group:"L",date:"17 Jun",team1:"England",team2:"Croatia",w1:44.2,d:26.2,w2:29.6},
+  {group:"L",date:"17 Jun",team1:"Ghana",team2:"Panama",w1:37.0,d:29.0,w2:34.0},
+  {group:"L",date:"23 Jun",team1:"England",team2:"Ghana",w1:68.1,d:17.9,w2:14.0},
+  {group:"L",date:"23 Jun",team1:"Panama",team2:"Croatia",w1:16.3,d:21.4,w2:62.3},
+  {group:"L",date:"27 Jun",team1:"Panama",team2:"England",w1:12.2,d:18.3,w2:69.5},
+  {group:"L",date:"27 Jun",team1:"Croatia",team2:"Ghana",w1:61.6,d:21.4,w2:17.0},
+];
+
+const groups = {
+  A:["Mexico","South Africa","South Korea","Czech Republic"],
+  B:["Canada","Bosnia and Herzegovina","Qatar","Switzerland"],
+  C:["Brazil","Morocco","Haiti","Scotland"],
+  D:["United States","Paraguay","Australia","Turkey"],
+  E:["Germany","Curaçao","Ivory Coast","Ecuador"],
+  F:["Netherlands","Japan","Sweden","Tunisia"],
+  G:["Belgium","Egypt","Iran","New Zealand"],
+  H:["Spain","Cape Verde","Saudi Arabia","Uruguay"],
+  I:["France","Senegal","Iraq","Norway"],
+  J:["Argentina","Algeria","Austria","Jordan"],
+  K:["Portugal","DR Congo","Uzbekistan","Colombia"],
+  L:["England","Croatia","Ghana","Panama"],
+};
+
+// ── RANKING CHART ─────────────────────────────────────────────────────────────
+(function() {
+  const chart = document.getElementById('rankingChart');
+  const top16 = Object.entries(rankings)
+    .filter(([,r]) => r <= 20)
+    .sort((a,b) => a[1]-b[1])
+    .slice(0,16);
+  const maxRank = 100;
+
+  top16.forEach(([team, rank]) => {
+    const pct = Math.round(((maxRank - rank + 1) / maxRank) * 100);
+    const row = document.createElement('div');
+    row.className = 'rank-row';
+    row.innerHTML = `
+      <span class="rank-team">${team}</span>
+      <div class="rank-bar-wrap">
+        <div class="rank-bar" style="width:${pct}%"></div>
+      </div>
+      <span class="rank-num">#${rank}</span>
+    `;
+    chart.appendChild(row);
+  });
+})();
+
+// ── GROUPS GRID ───────────────────────────────────────────────────────────────
+(function() {
+  const grid = document.getElementById('groupsGrid');
+
+  Object.entries(groups).forEach(([grpLetter, teamsList]) => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <div class="group-letter">${grpLetter}</div>
+      <div class="group-teams-list">${teamsList.join(' &bull; ')}</div>
+    `;
+    card.appendChild(header);
+
+    const matchList = document.createElement('div');
+    matchList.className = 'match-list';
+
+    const grpMatches = predictions.filter(m => m.group === grpLetter);
+    grpMatches.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'match-row';
+
+      const minW = 6; // minimum bar segment width % to show text
+      const showW1 = m.w1 > minW;
+      const showD  = m.d  > minW;
+      const showW2 = m.w2 > minW;
+
+      row.innerHTML = `
+        <div class="match-date">${m.date}</div>
+        <div class="match-names">
+          <span class="match-team">${m.team1}</span>
+          <span class="match-vs">vs</span>
+          <span class="match-team right">${m.team2}</span>
+        </div>
+        <div class="prob-bar" title="${m.team1} win ${m.w1}% | Draw ${m.d}% | ${m.team2} win ${m.w2}%">
+          <div class="prob-seg seg-w1" style="width:${m.w1}%">${showW1 ? m.w1+'%' : ''}</div>
+          <div class="prob-seg seg-draw" style="width:${m.d}%">${showD ? m.d+'%' : ''}</div>
+          <div class="prob-seg seg-w2" style="width:${m.w2}%">${showW2 ? m.w2+'%' : ''}</div>
+        </div>
+      `;
+      matchList.appendChild(row);
+    });
+
+    card.appendChild(matchList);
+    grid.appendChild(card);
+  });
+})();
+</script>
+</body>
+</html>

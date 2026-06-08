@@ -1,0 +1,111 @@
+date,home_team,away_team,home_score,away_score,source
+2022-11-20,Qatar,Ecuador,0.0,2.0,wc2022
+2022-11-21,Senegal,Netherlands,0.0,2.0,wc2022
+2022-11-21,England,Iran,6.0,2.0,wc2022
+2022-11-22,Argentina,Saudi Arabia,1.0,2.0,wc2022
+2022-11-22,France,Australia,4.0,1.0,wc2022
+2022-11-23,Germany,Japan,1.0,2.0,wc2022
+2022-11-23,Morocco,Croatia,0.0,0.0,wc2022
+2022-11-23,Belgium,Canada,1.0,0.0,wc2022
+2022-11-24,Uruguay,South Korea,0.0,0.0,wc2022
+2022-11-24,Portugal,Ghana,3.0,2.0,wc2022
+2022-11-25,Qatar,Senegal,1.0,3.0,wc2022
+2022-11-25,Netherlands,Ecuador,1.0,1.0,wc2022
+2022-11-25,England,United States,0.0,0.0,wc2022
+2022-11-26,Argentina,Mexico,2.0,0.0,wc2022
+2022-11-26,Tunisia,Australia,0.0,1.0,wc2022
+2022-11-27,Spain,Germany,1.0,1.0,wc2022
+2022-11-27,Belgium,Morocco,0.0,2.0,wc2022
+2022-11-27,Croatia,Canada,4.0,1.0,wc2022
+2022-11-28,Brazil,Switzerland,1.0,0.0,wc2022
+2022-11-28,South Korea,Ghana,2.0,3.0,wc2022
+2022-11-28,Portugal,Uruguay,2.0,0.0,wc2022
+2022-11-29,Ecuador,Senegal,1.0,2.0,wc2022
+2022-11-29,Qatar,Netherlands,0.0,2.0,wc2022
+2022-11-29,Iran,United States,0.0,1.0,wc2022
+2022-11-30,Saudi Arabia,Mexico,1.0,2.0,wc2022
+2022-11-30,Tunisia,France,1.0,0.0,wc2022
+2022-12-01,Japan,Spain,2.0,1.0,wc2022
+2022-12-01,Croatia,Belgium,0.0,0.0,wc2022
+2022-12-01,Canada,Morocco,1.0,2.0,wc2022
+2022-12-02,Ghana,Uruguay,0.0,2.0,wc2022
+2022-12-02,South Korea,Portugal,2.0,1.0,wc2022
+2022-12-03,Netherlands,United States,3.0,1.0,wc2022
+2022-12-03,Argentina,Australia,2.0,1.0,wc2022
+2022-12-04,England,Senegal,3.0,0.0,wc2022
+2022-12-05,Japan,Croatia,1.0,1.0,wc2022
+2022-12-05,Brazil,South Korea,4.0,1.0,wc2022
+2022-12-06,Morocco,Spain,0.0,0.0,wc2022
+2022-12-06,Portugal,Switzerland,6.0,1.0,wc2022
+2022-12-09,Croatia,Brazil,1.0,1.0,wc2022
+2022-12-09,Netherlands,Argentina,2.0,2.0,wc2022
+2022-12-10,Morocco,Portugal,1.0,0.0,wc2022
+2022-12-10,England,France,1.0,2.0,wc2022
+2022-12-13,Argentina,Croatia,3.0,0.0,wc2022
+2022-12-14,France,Morocco,2.0,0.0,wc2022
+2022-12-17,Croatia,Morocco,2.0,1.0,wc2022
+2022-12-18,Argentina,France,3.0,3.0,wc2022
+2023-09-07,Argentina,Ecuador,1.0,0.0,qual2026
+2023-09-12,Ecuador,Uruguay,2.0,1.0,qual2026
+2023-10-12,Colombia,Uruguay,2.0,2.0,qual2026
+2023-10-12,Argentina,Paraguay,1.0,0.0,qual2026
+2023-10-17,Ecuador,Colombia,0.0,0.0,qual2026
+2023-10-17,Uruguay,Brazil,2.0,0.0,qual2026
+2023-11-16,Colombia,Brazil,2.0,1.0,qual2026
+2023-11-16,Argentina,Uruguay,0.0,2.0,qual2026
+2023-11-21,Paraguay,Colombia,0.0,1.0,qual2026
+2023-11-21,Brazil,Argentina,0.0,1.0,qual2026
+2023-11-21,Uzbekistan,Iran,2.0,2.0,qual2026
+2023-11-21,Jordan,Saudi Arabia,0.0,2.0,qual2026
+2024-06-06,Senegal,DR Congo,1.0,1.0,qual2026
+2024-06-11,Iran,Uzbekistan,0.0,0.0,qual2026
+2024-06-11,Saudi Arabia,Jordan,1.0,2.0,qual2026
+2024-09-06,Uruguay,Paraguay,0.0,0.0,qual2026
+2024-09-06,Brazil,Ecuador,1.0,0.0,qual2026
+2024-09-10,Colombia,Argentina,2.0,1.0,qual2026
+2024-09-10,Paraguay,Brazil,1.0,0.0,qual2026
+2024-10-10,Ecuador,Paraguay,0.0,0.0,qual2026
+2024-10-10,Uzbekistan,Iran,0.0,0.0,qual2026
+2024-10-10,Jordan,South Korea,0.0,2.0,qual2026
+2024-10-10,Saudi Arabia,Japan,0.0,2.0,qual2026
+2024-10-15,Uruguay,Ecuador,0.0,0.0,qual2026
+2024-10-15,Iran,Qatar,4.0,1.0,qual2026
+2024-10-15,South Korea,Iraq,3.0,2.0,qual2026
+2024-10-15,Japan,Australia,1.0,1.0,qual2026
+2024-11-14,Paraguay,Argentina,2.0,1.0,qual2026
+2024-11-14,Qatar,Uzbekistan,3.0,2.0,qual2026
+2024-11-14,Iraq,Jordan,0.0,0.0,qual2026
+2024-11-14,Australia,Saudi Arabia,0.0,0.0,qual2026
+2024-11-15,Uruguay,Colombia,3.0,2.0,qual2026
+2024-11-19,Colombia,Ecuador,0.0,1.0,qual2026
+2024-11-19,Brazil,Uruguay,1.0,1.0,qual2026
+2025-03-20,Brazil,Colombia,2.0,1.0,qual2026
+2025-03-21,Uruguay,Argentina,0.0,1.0,qual2026
+2025-03-25,Colombia,Paraguay,2.0,2.0,qual2026
+2025-03-25,Argentina,Brazil,4.0,1.0,qual2026
+2025-03-25,Iran,Uzbekistan,2.0,2.0,qual2026
+2025-03-25,South Korea,Jordan,1.0,1.0,qual2026
+2025-03-25,Japan,Saudi Arabia,0.0,0.0,qual2026
+2025-06-05,Ecuador,Brazil,0.0,0.0,qual2026
+2025-06-05,Paraguay,Uruguay,2.0,0.0,qual2026
+2025-06-05,Qatar,Iran,1.0,0.0,qual2026
+2025-06-05,Iraq,South Korea,0.0,2.0,qual2026
+2025-06-05,Australia,Japan,1.0,0.0,qual2026
+2025-06-09,Croatia,Czech Republic,5.0,1.0,qual2026
+2025-06-10,Argentina,Colombia,1.0,1.0,qual2026
+2025-06-10,Brazil,Paraguay,1.0,0.0,qual2026
+2025-06-10,Uzbekistan,Qatar,3.0,0.0,qual2026
+2025-06-10,Jordan,Iraq,0.0,1.0,qual2026
+2025-06-10,Saudi Arabia,Australia,1.0,2.0,qual2026
+2025-06-10,Haiti,Curaçao,1.0,5.0,qual2026
+2025-09-04,Paraguay,Ecuador,0.0,0.0,qual2026
+2025-09-07,Turkey,Spain,0.0,6.0,qual2026
+2025-09-09,Ecuador,Argentina,1.0,0.0,qual2026
+2025-09-09,DR Congo,Senegal,2.0,3.0,qual2026
+2025-09-09,Bosnia and Herzegovina,Austria,1.0,2.0,qual2026
+2025-10-09,Czech Republic,Croatia,0.0,0.0,qual2026
+2025-10-10,Sweden,Switzerland,0.0,2.0,qual2026
+2025-10-14,Saudi Arabia,Iraq,0.0,0.0,qual2026
+2025-11-15,Switzerland,Sweden,4.0,1.0,qual2026
+2025-11-18,Spain,Turkey,2.0,2.0,qual2026
+2025-11-18,Austria,Bosnia and Herzegovina,1.0,1.0,qual2026
