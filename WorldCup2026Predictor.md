@@ -37,8 +37,8 @@ while teams with many observations are pulled towards their empirical results.
 | Component | Gelman 2014 | This project |
 |---|---|---|
 | Tournament | 32-team (2014 WC) | 48-team (2026 WC) |
-| Prior | FiveThirtyEight Soccer Power Index | FIFA Rankings (April 2025) |
-| Training data | 2014 WC group games only | 2022 WC + 2026 qualifying |
+| Prior | FiveThirtyEight Soccer Power Index | FIFA Rankings (3 April 2025) |
+| Training data | 2014 WC group games only | 2022 WC + 2026 qualifying (qualifiers + top-50 opponents) |
 | Output | Score difference distribution | Win / draw / loss percentages |
 | Implementation | PyStan 2 | PyStan 3 (Stan 3 array syntax) |
 
@@ -51,15 +51,15 @@ After running the notebook end-to-end, the working directory contains:
 ```
 wc2026/
 ├── data/
-│   ├── training_matches.csv      # 110 match results used for fitting
+│   ├── training_matches.csv      # 172 match results used for fitting
 │   ├── fixtures_2026.csv         # All 72 group-stage fixtures (raw)
 │   ├── predictions.csv           # Final win/draw/loss predictions
-│   ├── fifa_rankings_2025.json   # FIFA rankings for all 48 qualified teams
-│   ├── a_samples.npy             # Posterior samples for team abilities (48 × 8000)
+│   ├── fifa_rankings_2025.json   # FIFA ranks for all 62 model teams (48 qualified + 14 opponents)
+│   ├── a_samples.npy             # Posterior samples for team abilities (62 × 8000)
 │   ├── sigma_y_samples.npy       # Posterior samples for σ_y (8000,)
 │   ├── b_samples.npy             # Posterior samples for b (8000,)
-│   ├── prior_score.npy           # Rescaled FIFA ranking scores (48,)
-│   ├── teams.json                # Sorted list of 48 team names
+│   ├── prior_score.npy           # Rescaled FIFA ranking scores (62,)
+│   ├── teams.json                # Sorted list of the 62 model teams (48 qualified + 14 opponents)
 │   └── team_idx.json             # team_name → 1-indexed position in teams list
 └── notebooks/
     └── wc2026_predictions.ipynb  # Main notebook
@@ -218,21 +218,33 @@ Two subsets are extracted and concatenated:
 **2026 World Cup qualifying** (`source = 'qual2026'`):
 - Filter: `tournament == 'FIFA World Cup qualification'` and `date > 2022-12-18`
   (after the Qatar 2022 final).
-- Further filter: both teams among the 48 qualified nations, and `home_score` not null.
-- Result: **64 games**.
+- Further filter: both teams **in scope**, and `home_score` not null. A team is *in scope*
+  if it is a 2026 qualifier **or** ranked in the April-2025 FIFA top 50 (see §4.3).
+- Result: **126 games**.
 
-**Combined training set: 110 games**, covering the period 2022-11-20 to 2025-11-18.
+**Combined training set: 172 games**, covering the period 2022-11-20 to 2026-03-31.
 
-### 4.3 Why filter to qualified-team pairs only
+### 4.3 Why an "in-scope" filter (qualifier or FIFA top-50)
 
-Including games against non-qualifiers would inflate the estimated ability of strong
-nations (e.g., Germany beating San Marino 10–0 says little about Germany's ability
-relative to World Cup opponents). The bilateral filter ensures every training observation
-is informative about the relative abilities of teams in the 2026 tournament.
+An earlier version kept only qualifier-vs-qualifier games. That is safe but throws away a
+lot of signal: nine qualifiers had **zero** usable games, because their competitive
+qualifiers were mostly against strong nations that did not ultimately qualify (e.g. Norway
+and Scotland faced Italy; several CONMEBOL sides faced Peru, Chile and Venezuela).
 
-**OFC qualifying was excluded** because Oceania produced only one qualifier (New Zealand)
-via an intercontinental play-off. There are no competitive head-to-head qualifying games
-between multiple OFC-qualified teams.
+The current rule keeps a qualifying game when **both** teams are in scope — a 2026 qualifier
+*or* a side ranked in the April-2025 FIFA top 50. The non-qualified top-50 opponents are
+added to the model purely as **"measuring sticks"** so these games become usable; predictions
+are still produced only for the 48 qualified teams. 14 such opponents enter the model: Italy,
+Denmark, Ukraine, Wales, Serbia, Poland, Hungary, Greece, Peru, Nigeria, Romania, Slovakia,
+Venezuela, Cameroon — a **62-team model universe** (48 qualifiers + 14 opponents).
+
+The ranking threshold preserves the original motivation for excluding minnows: a result like
+Germany beating San Marino 10–0 (San Marino is ranked ~210) says little about Germany's true
+ability, and is still excluded. It simply no longer discards informative games against
+top-50 opposition.
+
+**OFC qualifying still contributes nothing** because Oceania produced only one qualifier
+(New Zealand), whose qualifying opponents are all ranked well outside the top 50.
 
 ### 4.4 Coverage by team
 
@@ -240,13 +252,16 @@ The training set is unevenly distributed across teams:
 
 | Games in training set | Teams |
 |---|---|
-| 0 (prior only) | Algeria, Cape Verde, Egypt, Ivory Coast, New Zealand, Norway, Panama, Scotland, South Africa |
-| 1–3 (sparse) | Belgium, Curaçao, Canada, Germany, Haiti, Mexico, Sweden, Turkey, Czech Republic, Tunisia, Bosnia and Herzegovina, Austria, DR Congo, Ghana, United States |
-| 4–16 (well-observed) | Argentina (16), Brazil (13), Uruguay (13), Ecuador (13), Colombia (10), Paraguay (10), South Korea (8), Iran (8), Croatia (9), Saudi Arabia (9), and others |
+| 0 (prior only) | Algeria, Egypt, Ivory Coast, New Zealand, Panama |
+| 1–3 (sparse) | Cape Verde, Canada, Czech Republic, Curaçao, Ghana, Haiti, Mexico, Norway, South Africa, Tunisia, Turkey, United States |
+| 4+ (well-observed) | Argentina (20), Brazil (17), Ecuador (17), Uruguay (17), Colombia (14), Paraguay (14), Croatia (9), Saudi Arabia (9), Iran (8), South Korea (8), Australia (7), France (7), Japan (7), Morocco (7), Netherlands (7), Portugal (7), Qatar (7), and others down to 4 |
 
-Teams with zero games have their ability estimates driven entirely by the FIFA ranking
-prior. The Bayesian framework handles this gracefully: the posterior for these teams
-simply equals their prior, and their uncertainty (posterior SD) is determined by `σ_a`.
+The in-scope filter cuts the number of qualified teams with no usable games from **nine to
+five** (Algeria, Egypt, Ivory Coast, New Zealand and Panama remain prior-only — their
+qualifying opponents were all ranked outside the top 50). Teams with zero games have their
+ability estimates driven entirely by the FIFA ranking prior. The Bayesian framework handles
+this gracefully: the posterior for these teams simply equals their prior, and their
+uncertainty (posterior SD) is determined by `σ_a`.
 
 ### 4.5 2026 fixture list
 
@@ -302,7 +317,8 @@ a_i ~ Normal( b * s_i,  σ_a )
 
 The hyperparameter `b` controls how much weight is given to the FIFA rankings. If `b ≈ 0`,
 the rankings carry no information and all teams are treated as equal a priori. In practice
-the model estimated `b ≈ 1.24`, confirming that rankings are genuinely informative.
+the model estimated `b ≈ 0.86`, confirming that rankings are genuinely informative (the
+earlier 110-game version gave `b ≈ 1.24`; more direct evidence lowers the reliance on the prior).
 
 ### 5.3 Non-centred parameterisation
 
@@ -378,16 +394,16 @@ fit = posterior.sample(num_chains=4, num_samples=2000, num_warmup=1000)
 
 | Parameter | Posterior mean | Interpretation |
 |---|---|---|
-| `b` | ≈ 1.24 | FIFA rankings are informative; rankings explain ~1.24 units of ability per standardised ranking point |
-| `σ_y` | ≈ 1.33 | Typical unexplained variation in score difference is ±1.3 goals given known abilities |
+| `b` | ≈ 0.86 | FIFA rankings remain informative, but with more direct evidence (172 games over a 62-team universe) the model leans on the ranking less than the earlier 110-game version (where `b ≈ 1.24`) |
+| `σ_y` | ≈ 1.38 | Typical unexplained variation in score difference is ±1.4 goals given known abilities |
 | `σ_a` | Estimated | Spread of team abilities around the prior prediction |
 
 ### 5.7 Calibration check
 
-An in-sample posterior predictive check was performed: for each of the 110 training games,
-the 95% posterior predictive interval for the score difference was computed. Only **3.6%**
+An in-sample posterior predictive check was performed: for each of the 172 training games,
+the 95% posterior predictive interval for the score difference was computed. Only **~3%**
 of actual results fell outside the interval. A perfectly calibrated model would produce
-exactly 5% — the slight under-coverage (3.6% vs 5%) means the intervals are marginally
+exactly 5% — the slight under-coverage (~3% vs 5%) means the intervals are marginally
 conservative, which is a safe direction for prediction.
 
 ---
@@ -396,17 +412,21 @@ conservative, which is a safe direction for prediction.
 
 ### 6.1 FIFA Rankings source
 
-The prior uses the **official FIFA World Rankings as of April 2025**, the most recent
-ranking update before the 2026 World Cup. These are hardcoded in the notebook as a Python
-dictionary mapping team name to integer rank (lower = stronger):
+The prior uses the **official FIFA/Coca-Cola Men's World Ranking of 3 April 2025** (release
+`id14702`, the last update before the model was built), pulled from the public FIFA ranking
+API (`inside.fifa.com/api/ranking-overview?dateId=id14702`). It is hardcoded in the notebook
+as a Python dictionary mapping team name to integer rank (lower = stronger). Unlike earlier
+versions, these are the **real, unedited** ranks, and the dictionary spans the full 62-team
+model universe — the 48 qualified teams **plus** the 14 non-qualified top-50 opponents added
+as measuring sticks (see §4.3):
 
 ```python
 rankings = {
-    "Argentina": 1,  "Spain": 2,     "France": 3,   "England": 4,
-    "Brazil": 5,     "Belgium": 6,   "Netherlands": 7, "Portugal": 8,
-    "Colombia": 9,   "Germany": 12,  "Croatia": 13,  "Uruguay": 14,
-    # ... all 48 qualified teams
-    "New Zealand": 95, "Haiti": 100,
+    "Argentina": 1,  "Spain": 2,      "France": 3,    "England": 4,
+    "Brazil": 5,     "Netherlands": 6,"Portugal": 7,  "Belgium": 8,
+    "Italy": 9,      "Germany": 10,   "Croatia": 11,  "Morocco": 12,
+    # ... all 48 qualifiers + 14 top-50 opponents (Italy, Denmark, Ukraine, …)
+    "Haiti": 83,     "New Zealand": 86, "Curaçao": 90,
 }
 ```
 
@@ -422,10 +442,11 @@ inv_ranks   = max(ranks) - ranks + 1       # invert: rank 1 → highest score
 prior_score = (inv_ranks - inv_ranks.mean()) / (2 * inv_ranks.std(ddof=1))
 ```
 
-This produces scores on approximately [−1.5, +0.7], with:
-- The average qualified team at score ≈ 0
-- Argentina (rank 1) at ≈ +0.66
-- Haiti (rank 100) at ≈ −1.54
+This produces scores on approximately [−1.24, +0.74] (standardised over the 62-team
+universe), with:
+- The average team at score ≈ 0
+- Argentina (rank 1) at ≈ +0.74
+- Curaçao (rank 90, the lowest-ranked qualifier) at ≈ −1.24
 
 ### 6.3 Team indexing
 
@@ -506,33 +527,37 @@ points — sufficient for reporting to one decimal place.
 
 ## 8. Results summary
 
-All 72 predictions are in `data/predictions.csv`. Selected highlights:
+All 72 predictions are in `data/predictions.csv`. The figures below are from the expanded
+172-game fit; with more direct evidence the model leans less on the ranking (`b ≈ 0.86`), so
+probabilities are noticeably **less extreme** than the earlier 110-game version — the most
+lopsided games now top out around 75% rather than ~89%. (Values are representative; the
+prediction step is a Monte-Carlo draw and varies by ~½ percentage point between runs, see §7.3.)
 
 ### Most lopsided fixtures
 
 | Team 1 | Team 2 | T1 win% | Draw% | T2 win% |
 |---|---|---|---|---|
-| Brazil | Haiti | 89.1 | 6.9 | 4.0 |
-| Morocco | Haiti | 87.5 | 8.1 | 4.4 |
-| Belgium | New Zealand | 86.8 | 8.2 | 4.9 *(T2 win = Belgium)* |
-| Iran | New Zealand | 81.2 | 11.9 | 6.9 |
-| Germany | Curaçao | 80.2 | 12.2 | 7.7 |
+| England | Ghana | 74.9 | 14.8 | 10.3 |
+| Brazil | Haiti | 74.6 | 15.0 | 10.5 |
+| New Zealand | Belgium | 11.2 | 14.8 | 74.0 |
+| Morocco | Haiti | 73.6 | 15.5 | 10.9 |
+| Germany | Curaçao | 72.4 | 16.1 | 11.6 |
 
 ### Most evenly matched fixtures
 
 | Team 1 | Team 2 | T1 win% | Draw% | T2 win% |
 |---|---|---|---|---|
-| Ghana | Panama | 37.0 | 29.0 | 34.0 |
-| Sweden | Tunisia | 34.6 | 27.3 | 38.1 |
-| Colombia | Portugal | 34.4 | 27.1 | 38.4 |
-| DR Congo | Uzbekistan | 38.9 | 27.1 | 34.1 |
-| Turkey | Paraguay | 38.8 | 27.5 | 33.7 |
+| Australia | Turkey | 37.8 | 26.9 | 35.4 |
+| Bosnia and Herzegovina | Qatar | 37.8 | 26.2 | 36.0 |
+| Brazil | Morocco | 38.1 | 27.2 | 34.6 |
+| DR Congo | Uzbekistan | 35.0 | 26.8 | 38.2 |
+| Mexico | South Korea | 38.6 | 26.1 | 35.3 |
 
 ### Notable predictions
 
-- **Brazil vs Morocco** (Group C): 41.7% / 27.2% / 31.2% — unusually competitive given Brazil's ranking; reflects Morocco's strong recent performances, including their 2022 WC semi-final run, which is captured in the training data.
-- **Netherlands vs Japan** (Group F): 45.8% / 26.1% / 28.1% — close match reflecting Japan's strong qualifying campaign and 2022 WC performance (knockout stage, beating Spain and Germany).
-- **Colombia vs Portugal** (Group K): 34.4% / 27.1% / 38.4% — Colombia rated higher than Portugal by the model despite Portugal's superior FIFA ranking, reflecting Colombia's heavy presence in the qualifying data (10 games vs Portugal's 5).
+- **Brazil vs Morocco** (Group C): 38.1% / 27.2% / 34.6% — almost a coin-flip; reflects Morocco's strong real ranking (12th) and their seven well-distributed training games (2022 WC semi-final run plus qualifying).
+- **Netherlands vs Japan** (Group F): 42.2% / 25.6% / 32.2% — close match reflecting Japan's strong qualifying campaign and 2022 WC performance (knockout stage, beating Spain and Germany).
+- **Colombia vs Portugal** (Group K): 33.0% / 26.1% / 40.9% — Portugal now favoured. With the real April-2025 ranking (Portugal 7th vs Colombia 14th) and a richer training set, the earlier version's Colombia edge disappears, even though Colombia has more training games (14 vs Portugal's 7).
 
 ---
 
@@ -549,14 +574,16 @@ implicitly for lopsided fixtures (where draws would be surprises in both cases).
 low-scoring games (0–0, 1–0, 0–1, 1–1). This naturally handles the integer structure
 of goals and the excess of draws.
 
-### 9.2 Nine teams are prior-only
+### 9.2 Five teams are prior-only
 
-Algeria, Cape Verde, Egypt, Ivory Coast, New Zealand, Norway, Panama, Scotland, and
-South Africa have no qualifying games against other qualified teams in the dataset.
-Their ability estimates are pure expressions of FIFA ranking with no data update.
+Algeria, Egypt, Ivory Coast, New Zealand and Panama have no in-scope games in the dataset —
+their competitive opponents were all ranked outside the top 50. Their ability estimates are
+pure expressions of FIFA ranking with no data update. (The in-scope filter of §4.3 cut this
+list from nine teams to five; the four it rescued — Norway, Scotland, South Africa and
+Cape Verde — gained games against top-50 opposition.)
 
-**Implication:** predictions for games involving these teams are essentially saying
-"teams of these FIFA rankings typically produce these outcomes" — there is no
+**Implication:** predictions for games involving the five remaining teams are essentially
+saying "teams of these FIFA rankings typically produce these outcomes" — there is no
 tournament-specific information for them beyond the ranking itself.
 
 ### 9.3 Prior and likelihood partially overlap
@@ -712,7 +739,7 @@ No local data files are needed before running the notebook. All data is fetched 
 runtime from:
 
 - Match results: `https://raw.githubusercontent.com/martj42/international_results/master/results.csv`
-- FIFA rankings: hardcoded dictionary in the notebook (sourced from FIFA.com, April 2025)
+- FIFA rankings: hardcoded dictionary in the notebook (real 3 April 2025 ranking, release `id14702`, from `inside.fifa.com/api/ranking-overview`)
 
 The notebook writes all outputs to `wc2026/data/` on first run. Subsequent runs can
 load from the saved `.npy` files to skip the Stan compilation and sampling steps.
