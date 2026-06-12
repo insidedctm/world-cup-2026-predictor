@@ -17,6 +17,7 @@ A technical reference for understanding, reproducing, and extending the model.
 9. [Known limitations and caveats](#9-known-limitations-and-caveats)
 10. [Extension ideas](#10-extension-ideas)
 11. [Dependencies](#11-dependencies)
+12. [Change log & model evolution](#12-change-log--model-evolution)
 
 ---
 
@@ -32,13 +33,21 @@ observations of the difference in abilities, corrupted by noise. A Bayesian hier
 allows teams with little data to borrow strength from the population-level prior (FIFA rankings),
 while teams with many observations are pulled towards their empirical results.
 
+> **Two models, one pipeline.** The project now contains two models that share the same teams,
+> FIFA-ranking prior and training data: the **Student-t score-difference** model documented in
+> detail below (`wc2026_predictions.ipynb`), and a **Dixon-Coles double-Poisson** companion
+> (`wc2026_dixoncoles.ipynb`) that models scorelines, adds home advantage, and drives a full
+> **tournament simulation** (Round-of-32 odds through to the title). See
+> [§12](#12-change-log--model-evolution) for the complete log of models, training-data strategy,
+> and key changes.
+
 **Key changes from the 2014 original:**
 
 | Component | Gelman 2014 | This project |
 |---|---|---|
 | Tournament | 32-team (2014 WC) | 48-team (2026 WC) |
 | Prior | FiveThirtyEight Soccer Power Index | FIFA Rankings (3 April 2025) |
-| Training data | 2014 WC group games only | 2022 WC + 2026 qualifying (qualifiers + top-50 opponents) |
+| Training data | 2014 WC group games only | 2022 WC + 2026 qualifying + 2024 Euro/Copa + AFCON 2023/25 (qualifiers + top-50 opponents) |
 | Output | Score difference distribution | Win / draw / loss percentages |
 | Implementation | PyStan 2 | PyStan 3 (Stan 3 array syntax) |
 
@@ -51,7 +60,7 @@ After running the notebook end-to-end, the working directory contains:
 ```
 wc2026/
 ├── data/
-│   ├── training_matches.csv      # 172 match results used for fitting
+│   ├── training_matches.csv      # 261 match results used for fitting
 │   ├── fixtures_2026.csv         # All 72 group-stage fixtures (raw)
 │   ├── predictions.csv           # Final win/draw/loss predictions
 │   ├── fifa_rankings_2025.json   # FIFA ranks for all 62 model teams (48 qualified + 14 opponents)
@@ -62,13 +71,14 @@ wc2026/
 │   ├── teams.json                # Sorted list of the 62 model teams (48 qualified + 14 opponents)
 │   └── team_idx.json             # team_name → 1-indexed position in teams list
 └── notebooks/
-    └── wc2026_predictions.ipynb  # Main notebook
+    ├── wc2026_predictions.ipynb  # Student-t model (this document)
+    └── wc2026_dixoncoles.ipynb   # Dixon-Coles companion + tournament simulation
 ```
 
 **Inspectable data files:**
 
 - `training_matches.csv` — raw match data with columns `date`, `home_team`, `away_team`,
-  `home_score`, `away_score`, `source` (`wc2022` or `qual2026`).
+  `home_score`, `away_score`, `source` (`wc2022`, `qual2026`, or `continental`).
 - `predictions.csv` — one row per fixture with columns `group`, `date`, `team1`, `team2`,
   `team1_win_pct`, `draw_pct`, `team2_win_pct`, `sum_check`.
 - `fifa_rankings_2025.json` — dictionary mapping team name to integer FIFA rank.
@@ -208,7 +218,9 @@ Columns used: `date`, `home_team`, `away_team`, `home_score`, `away_score`, `tou
 
 ### 4.2 Training set construction
 
-Two subsets are extracted and concatenated:
+Three subsets are extracted and concatenated. The **in-scope** rule (a team is in scope if it
+is a 2026 qualifier **or** ranked in the April-2025 FIFA top 50, see §4.3) gates the competitive
+subsets; only the 2022 World Cup is restricted to qualifier-vs-qualifier games.
 
 **2022 FIFA World Cup** (`source = 'wc2022'`):
 - Filter: `tournament == 'FIFA World Cup'` and `date` in `[2022-11-01, 2023-01-01)`.
@@ -218,11 +230,17 @@ Two subsets are extracted and concatenated:
 **2026 World Cup qualifying** (`source = 'qual2026'`):
 - Filter: `tournament == 'FIFA World Cup qualification'` and `date > 2022-12-18`
   (after the Qatar 2022 final).
-- Further filter: both teams **in scope**, and `home_score` not null. A team is *in scope*
-  if it is a 2026 qualifier **or** ranked in the April-2025 FIFA top 50 (see §4.3).
+- Further filter: both teams in scope, and `home_score` not null.
 - Result: **126 games**.
 
-**Combined training set: 172 games**, covering the period 2022-11-20 to 2026-03-31.
+**Recent continental finals** (`source = 'continental'`):
+- Filter: **UEFA Euro 2024** and **Copa América 2024** (June–July 2024), plus the
+  **Africa Cup of Nations** 2023 edition (played Jan–Feb 2024) and 2025 edition
+  (played Dec 2025 – Jan 2026).
+- Further filter: both teams in scope, and `home_score` not null.
+- Result: **89 games** (40 + 20 + 16 + 13).
+
+**Combined training set: 261 games**, covering the period 2022-11-20 to 2026-03-31.
 
 ### 4.3 Why an "in-scope" filter (qualifier or FIFA top-50)
 
@@ -252,16 +270,16 @@ The training set is unevenly distributed across teams:
 
 | Games in training set | Teams |
 |---|---|
-| 0 (prior only) | Algeria, Egypt, Ivory Coast, New Zealand, Panama |
-| 1–3 (sparse) | Cape Verde, Canada, Czech Republic, Curaçao, Ghana, Haiti, Mexico, Norway, South Africa, Tunisia, Turkey, United States |
-| 4+ (well-observed) | Argentina (20), Brazil (17), Ecuador (17), Uruguay (17), Colombia (14), Paraguay (14), Croatia (9), Saudi Arabia (9), Iran (8), South Korea (8), Australia (7), France (7), Japan (7), Morocco (7), Netherlands (7), Portugal (7), Qatar (7), and others down to 4 |
+| 0 (prior only) | New Zealand |
+| 1–3 (sparse) | Algeria, Curaçao, Haiti, Norway, Panama |
+| 4+ (well-observed) | Argentina (25), Uruguay (22), Brazil (20), Ecuador (20), Colombia (19), Paraguay (16), France (13), Netherlands (13), England (12), Morocco (12), Croatia (11), Senegal (11), Portugal (10), Spain (10), DR Congo (10), Germany (9), Belgium (9), and others down to 4 |
 
-The in-scope filter cuts the number of qualified teams with no usable games from **nine to
-five** (Algeria, Egypt, Ivory Coast, New Zealand and Panama remain prior-only — their
-qualifying opponents were all ranked outside the top 50). Teams with zero games have their
-ability estimates driven entirely by the FIFA ranking prior. The Bayesian framework handles
-this gracefully: the posterior for these teams simply equals their prior, and their
-uncertainty (posterior SD) is determined by `σ_a`.
+The in-scope filter plus the continental finals cut the number of qualified teams with no usable
+games from **nine → five → one**: only **New Zealand** is now prior-only (its competitive
+opponents are all ranked outside the top 50). The continental data in particular gave Algeria,
+Egypt, Ivory Coast and Panama their first usable games. Teams with zero games have their ability
+estimates driven entirely by the FIFA ranking prior — the Bayesian framework handles this
+gracefully: the posterior for such a team simply equals its prior, with uncertainty set by `σ_a`.
 
 ### 4.5 2026 fixture list
 
@@ -317,8 +335,9 @@ a_i ~ Normal( b * s_i,  σ_a )
 
 The hyperparameter `b` controls how much weight is given to the FIFA rankings. If `b ≈ 0`,
 the rankings carry no information and all teams are treated as equal a priori. In practice
-the model estimated `b ≈ 0.86`, confirming that rankings are genuinely informative (the
-earlier 110-game version gave `b ≈ 1.24`; more direct evidence lowers the reliance on the prior).
+the model estimated `b ≈ 0.94`, confirming that rankings are genuinely informative (earlier
+versions gave `b ≈ 1.24` on 110 games and `b ≈ 0.86` on 172; with 261 games the ranking weight
+settles around 0.9).
 
 ### 5.3 Non-centred parameterisation
 
@@ -394,17 +413,17 @@ fit = posterior.sample(num_chains=4, num_samples=2000, num_warmup=1000)
 
 | Parameter | Posterior mean | Interpretation |
 |---|---|---|
-| `b` | ≈ 0.86 | FIFA rankings remain informative, but with more direct evidence (172 games over a 62-team universe) the model leans on the ranking less than the earlier 110-game version (where `b ≈ 1.24`) |
-| `σ_y` | ≈ 1.38 | Typical unexplained variation in score difference is ±1.4 goals given known abilities |
+| `b` | ≈ 0.94 | FIFA rankings remain informative; with 261 training games over the 62-team universe the ranking weight sits near 0.9 (it was ≈ 1.24 on 110 games, ≈ 0.86 on 172) |
+| `σ_y` | ≈ 1.29 | Typical unexplained variation in score difference is ±1.3 goals given known abilities |
 | `σ_a` | Estimated | Spread of team abilities around the prior prediction |
 
 ### 5.7 Calibration check
 
-An in-sample posterior predictive check was performed: for each of the 172 training games,
-the 95% posterior predictive interval for the score difference was computed. Only **~3%**
-of actual results fell outside the interval. A perfectly calibrated model would produce
-exactly 5% — the slight under-coverage (~3% vs 5%) means the intervals are marginally
-conservative, which is a safe direction for prediction.
+An in-sample posterior predictive check was performed: for each of the 261 training games,
+the 95% posterior predictive interval for the score difference was computed. **5.0%**
+of actual results fell outside the interval — essentially perfect calibration (a perfectly
+calibrated model produces exactly 5%). The richer, more varied training set tightened this up
+from the ~3% under-coverage of the earlier 172-game version.
 
 ---
 
@@ -527,37 +546,38 @@ points — sufficient for reporting to one decimal place.
 
 ## 8. Results summary
 
-All 72 predictions are in `data/predictions.csv`. The figures below are from the expanded
-172-game fit; with more direct evidence the model leans less on the ranking (`b ≈ 0.86`), so
-probabilities are noticeably **less extreme** than the earlier 110-game version — the most
-lopsided games now top out around 75% rather than ~89%. (Values are representative; the
-prediction step is a Monte-Carlo draw and varies by ~½ percentage point between runs, see §7.3.)
+All 72 predictions are in `data/predictions.csv`. The figures below are from the Student-t model
+on the full **261-game** training set (`b ≈ 0.94`). Probabilities remain less extreme than the
+original 110-game version (most lopsided games top out near 80%, not ~89%). (Values are
+representative; the prediction step is a Monte-Carlo draw and varies by ~½ percentage point
+between runs, see §7.3. The Dixon-Coles companion produces materially higher draw probabilities
+for close games — see that notebook's §6.)
 
 ### Most lopsided fixtures
 
 | Team 1 | Team 2 | T1 win% | Draw% | T2 win% |
 |---|---|---|---|---|
-| England | Ghana | 74.9 | 14.8 | 10.3 |
-| Brazil | Haiti | 74.6 | 15.0 | 10.5 |
-| New Zealand | Belgium | 11.2 | 14.8 | 74.0 |
-| Morocco | Haiti | 73.6 | 15.5 | 10.9 |
-| Germany | Curaçao | 72.4 | 16.1 | 11.6 |
+| Brazil | Haiti | 79.5 | 13.0 | 7.4 |
+| Germany | Curaçao | 79.4 | 13.1 | 7.6 |
+| England | Ghana | 77.4 | 14.4 | 8.2 |
+| Spain | Cape Verde | 77.1 | 14.4 | 8.5 |
+| New Zealand | Belgium | 8.4 | 14.6 | 77.0 |
 
 ### Most evenly matched fixtures
 
 | Team 1 | Team 2 | T1 win% | Draw% | T2 win% |
 |---|---|---|---|---|
-| Australia | Turkey | 37.8 | 26.9 | 35.4 |
-| Bosnia and Herzegovina | Qatar | 37.8 | 26.2 | 36.0 |
-| Brazil | Morocco | 38.1 | 27.2 | 34.6 |
-| DR Congo | Uzbekistan | 35.0 | 26.8 | 38.2 |
-| Mexico | South Korea | 38.6 | 26.1 | 35.3 |
+| Australia | Turkey | 36.9 | 28.0 | 35.1 |
+| Mexico | South Korea | 37.3 | 28.2 | 34.5 |
+| Bosnia and Herzegovina | Qatar | 34.4 | 28.1 | 37.4 |
+| DR Congo | Uzbekistan | 33.4 | 28.6 | 38.1 |
+| Brazil | Morocco | 38.8 | 28.4 | 32.8 |
 
 ### Notable predictions
 
-- **Brazil vs Morocco** (Group C): 38.1% / 27.2% / 34.6% — almost a coin-flip; reflects Morocco's strong real ranking (12th) and their seven well-distributed training games (2022 WC semi-final run plus qualifying).
-- **Netherlands vs Japan** (Group F): 42.2% / 25.6% / 32.2% — close match reflecting Japan's strong qualifying campaign and 2022 WC performance (knockout stage, beating Spain and Germany).
-- **Colombia vs Portugal** (Group K): 33.0% / 26.1% / 40.9% — Portugal now favoured. With the real April-2025 ranking (Portugal 7th vs Colombia 14th) and a richer training set, the earlier version's Colombia edge disappears, even though Colombia has more training games (14 vs Portugal's 7).
+- **Brazil vs Morocco** (Group C): 38.8% / 28.4% / 32.8% — almost a coin-flip; reflects Morocco's strong real ranking (12th) and their twelve training games (2022 WC semi-final run, qualifying, and two AFCON editions).
+- **Argentina vs Algeria** (Group J): 60.7% / 22.1% / 17.2% — Algeria is no longer prior-only: the AFCON 2023 & 2025 data now informs its ability rather than the FIFA ranking alone.
+- **Colombia vs Portugal** (Group K): 31.6% / 29.3% / 39.1% — Portugal favoured. With the real April-2025 ranking (Portugal 7th vs Colombia 14th) the earlier curated-ranking Colombia edge stays gone, even though Colombia has more training games (19 vs Portugal's 10).
 
 ---
 
@@ -570,21 +590,26 @@ range 6–29%, whereas empirical World Cup group-stage draw rates are typically 
 The model tends to under-predict draws for closely-matched teams and over-predict them
 implicitly for lopsided fixtures (where draws would be surprises in both cases).
 
-**Fix:** Implement a bivariate Poisson model with a Dixon-Coles correction term for
-low-scoring games (0–0, 1–0, 0–1, 1–1). This naturally handles the integer structure
-of goals and the excess of draws.
+**Fix:** Implement a Dixon-Coles double-Poisson model with a low-score correction term
+(0–0, 1–0, 0–1, 1–1). This naturally handles the integer structure of goals and the excess
+of draws.
 
-### 9.2 Five teams are prior-only
+> **Status — done in the Dixon-Coles companion.** `wc2026_dixoncoles.ipynb` implements this; its
+> negative dependence parameter `ρ ≈ −0.04` lifts low-score draws, raising the draw probability
+> for evenly-matched fixtures (e.g. Brazil v Morocco ≈ 31% vs the Student-t's ≈ 28%).
 
-Algeria, Egypt, Ivory Coast, New Zealand and Panama have no in-scope games in the dataset —
-their competitive opponents were all ranked outside the top 50. Their ability estimates are
-pure expressions of FIFA ranking with no data update. (The in-scope filter of §4.3 cut this
-list from nine teams to five; the four it rescued — Norway, Scotland, South Africa and
-Cape Verde — gained games against top-50 opposition.)
+### 9.2 One team is prior-only
 
-**Implication:** predictions for games involving the five remaining teams are essentially
-saying "teams of these FIFA rankings typically produce these outcomes" — there is no
-tournament-specific information for them beyond the ranking itself.
+Only **New Zealand** now has no in-scope games — its competitive opponents are all ranked
+outside the top 50, and as the sole OFC qualifier it played no in-scope continental finals.
+Its ability estimate is a pure expression of FIFA ranking with no data update. (The prior-only
+list shrank from nine → five → one across versions: the in-scope filter rescued Norway, Scotland,
+South Africa and Cape Verde; the continental finals then rescued Algeria, Egypt, Ivory Coast and
+Panama.)
+
+**Implication:** predictions for New Zealand's games are essentially saying "a team of this FIFA
+ranking typically produces these outcomes" — there is no tournament-specific information for it
+beyond the ranking itself.
 
 ### 9.3 Prior and likelihood partially overlap
 
@@ -606,7 +631,11 @@ for teams whose qualifying record is predominantly home or away.
 
 **Fix:** Add a binary home indicator to the training data and a home advantage
 parameter `h` to the likelihood: `y_k ~ t_7(a[i(k)] - a[j(k)] + h * home_k, σ_y)`.
-Set `home_k = 0` for 2022 WC games (neutral) and the 2026 fixtures.
+Set `home_k = 0` for neutral games and the 2026 fixtures.
+
+> **Status — done in the Dixon-Coles companion.** `wc2026_dixoncoles.ipynb` estimates a
+> `home_adv` term applied to non-neutral training games (≈ 0.20 in log-rate, ~1.2× scoring);
+> the Student-t model documented here still treats all games as neutral.
 
 ### 9.5 No temporal decay
 
@@ -627,6 +656,10 @@ despite these suggesting very different playing styles and vulnerabilities.
 
 **Fix:** Model home goals and away goals as independent Poisson variables, learning
 separate attack and defence parameters per team (the Dixon-Coles or Maher model).
+
+> **Status — done in the Dixon-Coles companion.** `wc2026_dixoncoles.ipynb` implements exactly
+> this: two Poisson scorelines with per-team attack/defence, plus the Dixon-Coles low-score
+> correction that also fixes the under-counted draws of §9.1.
 
 ---
 
@@ -743,6 +776,61 @@ runtime from:
 
 The notebook writes all outputs to `wc2026/data/` on first run. Subsequent runs can
 load from the saved `.npy` files to skip the Stan compilation and sampling steps.
+
+---
+
+## 12. Change log & model evolution
+
+This project grew from a single Student-t model into two complementary models plus a tournament
+simulation. This section logs the models, the training-data strategy, and the other key changes.
+
+### 12.1 Models
+
+| Model | Notebook | What it models | Key parameters (261-game fit) | Strengths |
+|---|---|---|---|---|
+| **Student-t score difference** (Gelman-style) | `wc2026_predictions.ipynb` | Score *difference* as Student-t(ν=7) on the ability gap; W/D/L via a ±0.5 threshold | `b ≈ 0.94`, `σ_y ≈ 1.29` | Simple; well-calibrated (5.0% outside the 95% interval) |
+| **Dixon-Coles double-Poisson** | `wc2026_dixoncoles.ipynb` | Two scorelines as Poissons + low-score correction; per-team attack/defence; home advantage | `home_adv ≈ 0.20`, `ρ ≈ −0.04`, `b_att ≈ 0.47`, `b_def ≈ 0.40` | Proper draws, home advantage, full scorelines |
+| **Tournament simulation** (on Dixon-Coles) | `wc2026_dixoncoles.ipynb` §9–11 | Monte-Carlo of the 72 group games → standings (full tiebreakers) → official knockout bracket | 10,000 simulated tournaments | Round-of-32 odds through to title probabilities |
+
+Both models share the same 48 qualifiers, 62-team universe, FIFA-ranking prior, and training set,
+so their per-fixture predictions are directly comparable (the DC notebook fits both and plots the
+difference). The Dixon-Coles model implements the fixes flagged in §9.1, §9.4 and §9.6.
+
+### 12.2 Training-data strategy
+
+The training set was broadened in three stages, each cutting the number of teams with no usable
+data and improving calibration:
+
+| Stage | Training data | Games | Prior-only | `b` |
+|---|---|---|---|---|
+| 1 — Initial | 2022 WC + 2026 qualifying, **both teams among the 48 qualifiers** | 110 | 9 | ≈ 1.24 |
+| 2 — In-scope + real ranking | Broadened to **"qualifier OR FIFA top-50"** using the real 3 Apr 2025 ranking; 14 "measuring-stick" opponents added (62-team universe) | 172 | 5 | ≈ 0.86 |
+| 3 — Continental finals | Added **Euro 2024, Copa América 2024, AFCON 2023 & 2025** (in-scope) | 261 | 1 | ≈ 0.94 |
+
+The **in-scope rule** (§4.3) is the core idea: keep any competitive game where *both* sides are a
+2026 qualifier or a FIFA top-50 team, so strong non-qualifiers (Italy, Denmark, …) serve as
+measuring sticks while minnow blow-outs stay excluded. 2022 World Cup games remain qualifier-only.
+
+### 12.3 Other key changes (chronological)
+
+- **Curaçao spelling fix.** The notebook used "Curacoa"; the dataset uses "Curaçao". Fixing it
+  added one qualifying game (109 → 110) and removed Curaçao from the prior-only list.
+- **Real FIFA ranking.** Replaced the original hand-curated ranks with the **real 3 April 2025**
+  FIFA ranking (release `id14702`, from the FIFA JSON API) for all 62 model teams.
+- **In-scope filter + 62-team universe.** Introduced the "qualifier OR top-50" rule and the
+  measuring-stick opponents (stage 2 above).
+- **Official kickoff times.** Added the official 2026 ET kickoff times and venues to the fixture
+  table, matched to fixtures by team pair.
+- **Dixon-Coles companion model.** Built `wc2026_dixoncoles.ipynb` (scorelines, home advantage,
+  proper draws) with a side-by-side comparison against the Student-t model.
+- **Tournament simulation.** Added the Monte-Carlo Round-of-32 (and full knockout) simulation
+  with FIFA's group tiebreakers (points → GD → goals → head-to-head → drawing of lots) and the
+  official bracket.
+- **Continental training data.** Added Euro 2024, Copa América 2024 and AFCON 2023 & 2025
+  (stage 3 above), which gave Algeria, Egypt, Ivory Coast and Panama their first usable games.
+- **Environment fixes (macOS).** Toolchain quirks needed to compile httpstan: an SDK `-isysroot`
+  override (Homebrew Python referenced a removed SDK), `setuptools<81` (PyStan 3 imports the
+  removed `pkg_resources`), and `nest_asyncio` (PyStan's `asyncio.run` inside the Jupyter loop).
 
 ---
 
