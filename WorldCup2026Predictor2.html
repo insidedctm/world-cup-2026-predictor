@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 Predictor — Part II: Refining the Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0d1b2a;
+    --navy-mid:   #1a2e45;
+    --navy-light: #243d57;
+    --forest:     #1e4d3b;
+    --forest-mid: #2a6651;
+    --forest-light: #35866a;
+    --gold:       #c9943a;
+    --gold-light: #e8b96a;
+    --cream:      #f5f0e8;
+    --cream-dark: #ede5d4;
+    --text:       #1a1a2e;
+    --text-mid:   #3d3d5c;
+    --text-light: #6b6b8a;
+    --rule:       #c9943a;
+    --win1:       #1d6fa4;
+    --draw:       #7a8fa6;
+    --win2:       #8b3a2a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.75;
+    overflow-x: hidden;
+  }
+
+  /* ── MASTHEAD ── */
+  .masthead { background: var(--navy); padding: 0; position: relative; overflow: hidden; }
+  .masthead::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 50%, rgba(30,77,59,0.35) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 80% at 85% 30%, rgba(201,148,58,0.12) 0%, transparent 60%);
+  }
+  .masthead-inner {
+    position: relative; max-width: 1100px; margin: 0 auto; padding: 72px 48px 56px;
+    display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: end;
+  }
+  .masthead-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .masthead-eyebrow::before { content: ''; display: inline-block; width: 32px; height: 1px; background: var(--gold); }
+  .masthead h1 {
+    font-family: 'Playfair Display', Georgia, serif; font-size: clamp(42px, 5.5vw, 72px);
+    font-weight: 900; line-height: 1.02; color: var(--cream); letter-spacing: -0.02em;
+  }
+  .masthead h1 em { font-style: italic; color: var(--gold-light); }
+  .masthead-sub { color: rgba(245,240,232,0.65); font-size: 15px; font-weight: 300; margin-top: 20px; max-width: 540px; line-height: 1.65; }
+  .masthead-meta { text-align: right; color: rgba(245,240,232,0.45); font-size: 13px; font-family: 'JetBrains Mono', monospace; line-height: 2; white-space: nowrap; }
+  .masthead-meta strong { color: var(--gold-light); font-weight: 500; }
+
+  /* ── NAV ── */
+  .nav-strip { background: var(--navy-mid); border-bottom: 1px solid rgba(201,148,58,0.3); position: sticky; top: 0; z-index: 100; }
+  .nav-strip ul { max-width: 1100px; margin: 0 auto; padding: 0 48px; list-style: none; display: flex; gap: 0; }
+  .nav-strip a {
+    display: block; padding: 14px 18px; color: rgba(245,240,232,0.6); text-decoration: none;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; transition: color 0.2s; border-bottom: 2px solid transparent;
+  }
+  .nav-strip a:hover { color: var(--gold-light); border-bottom-color: var(--gold); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 0 48px; }
+  section { padding: 80px 0 64px; border-bottom: 1px solid var(--cream-dark); }
+  section:last-of-type { border-bottom: none; }
+
+  /* ── SECTION HEADERS ── */
+  .section-number {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-number::after { content: ''; flex: 1; height: 1px; background: var(--cream-dark); max-width: 60px; }
+  h2 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(28px, 3.5vw, 42px); font-weight: 700; line-height: 1.15; color: var(--navy); letter-spacing: -0.01em; margin-bottom: 32px; }
+  h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 600; color: var(--navy); margin: 40px 0 16px; }
+  h4 { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--forest-mid); margin: 28px 0 10px; }
+
+  /* ── PROSE ── */
+  p { color: var(--text-mid); margin-bottom: 18px; max-width: 70ch; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--text); font-weight: 600; }
+  a.inline { color: var(--forest-mid); text-decoration: none; border-bottom: 1px solid var(--cream-dark); }
+  a.inline:hover { border-bottom-color: var(--gold); }
+
+  /* ── LEDE ── */
+  .lede { font-size: 21px; line-height: 1.6; color: var(--text-mid); max-width: 68ch; margin-bottom: 28px; }
+  .lede strong { color: var(--navy); }
+
+  /* ── PULL QUOTE ── */
+  .pull-quote { border-left: 4px solid var(--gold); padding: 20px 28px; margin: 40px 0; background: rgba(201,148,58,0.06); border-radius: 0 4px 4px 0; }
+  .pull-quote p { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-style: italic; color: var(--navy); line-height: 1.55; max-width: 60ch; margin: 0; }
+
+  /* ── COLUMNS ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  .two-col-wide { display: grid; grid-template-columns: 3fr 2fr; gap: 56px; align-items: start; }
+
+  /* ── EQUATION BLOCK ── */
+  .eq-block { background: var(--navy); border-radius: 8px; padding: 32px 36px; margin: 32px 0; position: relative; overflow: hidden; }
+  .eq-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--forest-mid), var(--gold)); }
+  .eq-block .eq-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  .eq-block .eq { font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--cream); line-height: 2.2; }
+  .eq-block .eq .comment { color: rgba(245,240,232,0.4); font-size: 12px; }
+  .eq-block .eq .highlight { color: var(--gold-light); }
+
+  /* ── PARAMETER CARDS ── */
+  .param-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 28px 0; }
+  .param-card { background: white; border: 1px solid var(--cream-dark); border-radius: 6px; padding: 20px 22px; border-top: 3px solid var(--forest-mid); transition: box-shadow 0.2s; }
+  .param-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .param-name { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; color: var(--forest-mid); margin-bottom: 4px; }
+  .param-desc { font-size: 13.5px; color: var(--text-mid); line-height: 1.55; }
+  .param-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gold); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--cream-dark); }
+
+  /* ── DATA TABLE ── */
+  .data-table-wrap { overflow-x: auto; margin: 28px 0; border-radius: 8px; border: 1px solid var(--cream-dark); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead tr { background: var(--navy); }
+  thead th { padding: 13px 16px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-light); font-weight: 500; white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--cream-dark); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(30,77,59,0.04); }
+  tbody td { padding: 11px 16px; color: var(--text-mid); vertical-align: middle; }
+  .td-team { font-weight: 600; color: var(--text); }
+  .td-rank { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-light); }
+  .td-num { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text-mid); }
+  .td-strong { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--forest-mid); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; font-weight: 500; }
+  .badge-wc   { background: rgba(29,111,164,0.15); color: #1d6fa4; }
+  .badge-qual { background: rgba(201,148,58,0.15); color: #9a6e1a; }
+  .badge-cont { background: rgba(53,134,106,0.18); color: #2a6651; }
+
+  /* ── STAT PILLS ── */
+  .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin: 32px 0; }
+  .stat-pill { background: var(--navy); color: var(--cream); border-radius: 6px; padding: 18px 24px; min-width: 140px; text-align: center; position: relative; overflow: hidden; flex: 1; }
+  .stat-pill::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--gold); }
+  .stat-pill .stat-n { font-family: 'Playfair Display', Georgia, serif; font-size: 34px; font-weight: 700; line-height: 1; color: var(--gold-light); display: block; }
+  .stat-pill .stat-n small { font-size: 17px; color: rgba(245,240,232,0.5); font-style: italic; }
+  .stat-pill .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(245,240,232,0.55); margin-top: 6px; display: block; }
+
+  /* ── PROB BARS ── */
+  .prob-line { margin: 14px 0; }
+  .prob-line .pl-label { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .prob-line .pl-label span:last-child { font-family: 'JetBrains Mono', monospace; font-weight: 400; color: var(--text-light); font-size: 11px; }
+  .prob-bar { height: 22px; display: flex; border-radius: 3px; overflow: hidden; font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .prob-seg { display: flex; align-items: center; justify-content: center; color: white; font-weight: 500; font-size: 10px; overflow: hidden; white-space: nowrap; }
+  .seg-w1 { background: var(--win1); } .seg-draw { background: var(--draw); } .seg-w2 { background: var(--win2); }
+
+  /* ── RANKING BARS ── */
+  .ranking-chart { margin: 24px 0; }
+  .rank-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid rgba(237,229,212,0.7); }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-team { font-size: 12.5px; font-weight: 600; color: var(--text); width: 130px; flex-shrink: 0; }
+  .rank-team small { font-family:'JetBrains Mono',monospace; font-weight:400; color: var(--text-light); font-size: 10px; }
+  .rank-bar-wrap { flex: 1; height: 13px; background: var(--cream-dark); border-radius: 2px; overflow: hidden; }
+  .rank-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--forest-mid), var(--forest-light)); }
+  .rank-bar.gold { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .rank-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-light); width: 44px; text-align: right; flex-shrink: 0; }
+
+  /* ── CAVEAT / NEXT LIST ── */
+  .caveat-list { list-style: none; margin: 24px 0; }
+  .caveat-list li { display: flex; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--cream-dark); align-items: flex-start; }
+  .caveat-list li:last-child { border-bottom: none; }
+  .caveat-num { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; flex-shrink: 0; width: 28px; margin-top: 2px; }
+  .caveat-text { font-size: 14.5px; color: var(--text-mid); line-height: 1.65; max-width: 66ch; }
+  .caveat-text strong { color: var(--text); }
+
+  /* ── PIPELINE ── */
+  .pipeline { display: flex; align-items: stretch; gap: 0; margin: 36px 0; overflow-x: auto; }
+  .pipeline-step { background: white; border: 1px solid var(--cream-dark); border-right: none; padding: 20px; flex: 1; min-width: 120px; position: relative; }
+  .pipeline-step:last-child { border-right: 1px solid var(--cream-dark); border-radius: 0 6px 6px 0; }
+  .pipeline-step:first-child { border-radius: 6px 0 0 6px; }
+  .pipeline-step::after { content: '→'; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--gold); font-size: 18px; z-index: 2; }
+  .pipeline-step:last-child::after { display: none; }
+  .pipe-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 0.12em; margin-bottom: 8px; }
+  .pipe-title { font-family: 'Playfair Display', Georgia, serif; font-size: 15px; font-weight: 600; color: var(--navy); margin-bottom: 6px; line-height: 1.3; }
+  .pipe-desc { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+
+  /* ── FOLLOW-ON: VERSION CARDS, CHIPS, CALLOUT ── */
+  .version-tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 3px; background: rgba(30,77,59,0.1); color: var(--forest-mid); font-weight: 500; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+  .chips span { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 5px 11px; background: white; border: 1px solid var(--cream-dark); border-radius: 4px; color: var(--text-mid); }
+  .chips span b { color: var(--gold); font-weight: 500; }
+  .callout { background: rgba(30,77,59,0.05); border: 1px solid var(--cream-dark); border-left: 3px solid var(--forest-mid); border-radius: 0 6px 6px 0; padding: 20px 26px; margin: 32px 0; }
+  .callout h4 { margin-top: 0; }
+  .callout p { font-size: 14.5px; max-width: 64ch; }
+  .delta { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .delta.pos { color: var(--forest-light); }
+  .delta.neg { color: var(--win2); }
+  .arrow { color: var(--gold); padding: 0 4px; }
+
+  /* ── FOOTER ── */
+  footer { background: var(--navy); padding: 48px 0; margin-top: 0; }
+  .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 48px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .footer-brand { font-family: 'Playfair Display', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--cream); }
+  .footer-brand span { color: var(--gold-light); font-style: italic; }
+  .footer-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(245,240,232,0.35); line-height: 1.9; text-align: right; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 800px) {
+    .masthead-inner { grid-template-columns: 1fr; padding: 48px 24px 40px; }
+    .masthead-meta { display: none; }
+    .page { padding: 0 24px; }
+    .nav-strip ul { padding: 0 16px; overflow-x: auto; }
+    .two-col, .two-col-wide { grid-template-columns: 1fr; gap: 32px; }
+    .param-grid { grid-template-columns: 1fr; }
+    .pipeline { flex-direction: column; }
+    .pipeline-step { border-right: 1px solid var(--cream-dark); border-bottom: none; border-radius: 0; }
+    .pipeline-step:last-child { border-radius: 0 0 6px 6px; }
+    .pipeline-step:first-child { border-radius: 6px 6px 0 0; }
+    .pipeline-step::after { content: '↓'; right: auto; top: auto; bottom: -12px; left: 50%; transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">Bayesian Football Analytics &middot; Part II</div>
+      <h1>Refining the<br><em>Predictor</em></h1>
+      <p class="masthead-sub">A follow-on. How a 110-game Bayesian model — leaning hard on the rankings, blind to draws, scoring one match at a time — grew into a well-calibrated, 261-game, two-model system that simulates the entire tournament and knows how to score itself. The bugs, the data, and the design choices, in order.</p>
+    </div>
+    <div class="masthead-meta">
+      <strong>Models</strong><br>Student-t &amp; Dixon-Coles<br><br>
+      <strong>Training data</strong><br>110 &rarr; 261 matches<br><br>
+      <strong>Prior-only teams</strong><br>9 &rarr; 1<br><br>
+      <strong>Calibration</strong><br>~3% &rarr; 5.0%<br><br>
+      <strong>Simulation</strong><br>10,000 tournaments<br><br>
+      <strong>Software</strong><br>PyStan 3 / Stan
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-strip">
+  <ul>
+    <li><a href="#recap">Recap</a></li>
+    <li><a href="#typo">The Typo</a></li>
+    <li><a href="#rankings">Real Rankings</a></li>
+    <li><a href="#data">More Data</a></li>
+    <li><a href="#dixoncoles">Dixon-Coles</a></li>
+    <li><a href="#simulation">Simulation</a></li>
+    <li><a href="#scoring">Scoring</a></li>
+    <li><a href="#next">What's Next</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+<!-- ─────────────────────────────────────────── RECAP -->
+<section id="recap">
+  <div class="section-number">01 &mdash; Where we left off</div>
+  <h2>A good model,<br>with rough edges</h2>
+
+  <p class="lede">The <a class="inline" href="WorldCup2026Predictor.html">first instalment</a> adapted Andrew Gelman's 2014 hierarchical model to the 48-team 2026 World Cup. It worked. But it leaned heavily on the FIFA rankings, treated draws as an afterthought, and — as it turned out — had a quiet bug in its data.</p>
+
+  <div class="two-col-wide">
+    <div>
+      <p>The baseline was elegant: model the <strong>score difference</strong> between two teams as a Student-t draw centred on the gap in their latent abilities, with each ability pulled toward a FIFA-ranking prior. Win, draw and loss came from slicing the predicted difference at &plusmn;0.5 goals. It trained on 110 games — the 2022 World Cup plus 2026 qualifiers — and produced sensible numbers for all 72 group fixtures.</p>
+
+      <p>Yet three things nagged. With only 110 games the model leaned hard on the prior (the ranking weight <span class="td-strong">b &asymp; 1.24</span>). <strong>Nine</strong> qualified teams had no usable match data at all. And the &plusmn;0.5 threshold systematically under-counted draws — the most common result in tournament football.</p>
+
+      <p>What follows is the story of closing each gap, roughly in the order it happened: a data fix, a real prior, more and better games, a second model built for goals, a full tournament simulation, and finally the maths of the leaderboard the predictions feed into.</p>
+    </div>
+    <div>
+      <h4>The journey in one line</h4>
+      <div class="pipeline">
+        <div class="pipeline-step"><div class="pipe-n">V1</div><div class="pipe-title">Baseline</div><div class="pipe-desc">110 games, curated ranks</div></div>
+        <div class="pipeline-step"><div class="pipe-n">V2</div><div class="pipe-title">Real prior + scope</div><div class="pipe-desc">172 games, top-50 net</div></div>
+        <div class="pipeline-step"><div class="pipe-n">V3</div><div class="pipe-title">+ Tournaments</div><div class="pipe-desc">261 games, calibrated</div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-n">110</span><span class="stat-label">Starting games</span></div>
+        <div class="stat-pill"><span class="stat-n">9</span><span class="stat-label">Prior-only teams</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── THE TYPO -->
+<section id="typo">
+  <div class="section-number">02 &mdash; A typo in the data</div>
+  <h2>The team that<br>vanished</h2>
+
+  <div class="two-col-wide">
+    <div>
+      <p>The first improvement cost one line of code and exposed a habit worth keeping. The notebook listed one Group E side as <span class="td-strong">"Curacoa"</span>. The match database — the community-maintained <a class="inline" href="https://github.com/martj42/international_results">martj42/international_results</a> set — spells it <span class="td-strong">"Curaçao"</span>, with the cedilla.</p>
+
+      <p>Because the name never matched, Curaçao's lone competitive result (a 5–1 loss to Haiti in qualifying) was silently dropped, and the team was quietly relegated to <em>prior-only</em> status — its rating driven entirely by the ranking, with no data update. Nothing errored. The model just ran with a phantom.</p>
+
+      <div class="pull-quote">
+        <p>"Nothing crashed, and that was the danger. A string that doesn't match doesn't raise an exception — it just quietly removes a team from the evidence."</p>
+      </div>
+
+      <p>Fixing the spelling lifted the training set from 109 to <strong>110</strong> games and gave Curaçao a real, if unflattering, data point. A trivial change — but it set the tone for everything after: the model is only ever as good as the rows that survive the filters.</p>
+    </div>
+    <div>
+      <div class="callout">
+        <h4>Before &rarr; after</h4>
+        <p style="margin-bottom:14px"><span class="version-tag">bug</span> &nbsp; <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--win2)">"Curacoa"</code> &mdash; matches nothing</p>
+        <p style="margin-bottom:0"><span class="version-tag">fix</span> &nbsp; <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--forest-mid)">"Curaçao"</code> &mdash; +1 game, no longer prior-only</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── REAL RANKINGS -->
+<section id="rankings">
+  <div class="section-number">03 &mdash; Real rankings, real measuring sticks</div>
+  <h2>Stop throwing<br>away the data</h2>
+
+  <p class="lede">Two changes here, and together they were the biggest single jump. First, a <strong>real</strong> FIFA ranking. Then a rule that stopped discarding the most informative games in the dataset.</p>
+
+  <div class="two-col-wide">
+    <div>
+      <p>The original "April 2025" ranking was a hand-curated table — close to reality, but quietly fictional, with only a handful of gaps in the top 50. We replaced it wholesale with the <strong>actual FIFA/Coca-Cola World Ranking of 3 April 2025</strong>, pulled straight from FIFA's own JSON API, for every team in the model.</p>
+
+      <p>The deeper problem was the training filter. The baseline kept only games between two <em>qualified</em> teams — safe, but wasteful. Norway and Scotland's most informative qualifiers were against Italy. Several South American sides played Peru, Chile and Venezuela. None of those opponents qualified, so all those games were thrown away — which is exactly why nine teams had nothing to learn from.</p>
+
+      <p>The new rule keeps a game when <strong>both</strong> sides are <em>in scope</em>: a 2026 qualifier <em>or</em> a side ranked in the FIFA top 50. The strong non-qualifiers join the model purely as <strong>"measuring sticks"</strong> — we never predict their games, but their results pin down the qualifiers who faced them. Fourteen of them entered, expanding the model to a <strong>62-team universe</strong>.</p>
+
+      <p>The threshold keeps the original safeguard intact: a 10–0 over San Marino (ranked ~210) still tells us nothing and is still excluded. We simply stopped discarding the games that <em>do</em> carry signal.</p>
+    </div>
+    <div>
+      <h4>The 14 measuring sticks</h4>
+      <p style="font-size:14px">Non-qualifiers in the April-2025 top 50 that faced our qualifiers — added to anchor the ratings, never predicted.</p>
+      <div class="chips">
+        <span>Italy <b>9</b></span><span>Denmark <b>21</b></span><span>Ukraine <b>25</b></span>
+        <span>Wales <b>29</b></span><span>Serbia <b>31</b></span><span>Poland <b>34</b></span>
+        <span>Hungary <b>37</b></span><span>Greece <b>40</b></span><span>Peru <b>42</b></span>
+        <span>Nigeria <b>43</b></span><span>Romania <b>45</b></span><span>Slovakia <b>46</b></span>
+        <span>Venezuela <b>47</b></span><span>Cameroon <b>50</b></span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-n">172</span><span class="stat-label">Games &middot; was 110</span></div>
+        <div class="stat-pill"><span class="stat-n">0.86</span><span class="stat-label">Ranking weight b</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h4>Why b fell</h4>
+    <p>With more direct evidence the model trusts the ranking less. The prior weight <span class="td-strong">b</span> dropped from <span class="delta neg">1.24</span> <span class="arrow">&rarr;</span> <span class="delta pos">0.86</span>, and the count of teams with no data fell from <strong>nine to five</strong>. Predictions became noticeably less extreme — the most lopsided games stopped topping out near 90%.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── MORE DATA -->
+<section id="data">
+  <div class="section-number">04 &mdash; Feeding it real tournaments</div>
+  <h2>Knockout football,<br>added to the mix</h2>
+
+  <div class="two-col-wide">
+    <div>
+      <p>Qualifiers are useful but lopsided and low-stakes. The richest recent evidence about the contenders sits in the <strong>continental finals</strong> — so we added four of them, under the same in-scope rule: <strong>Euro 2024</strong>, <strong>Copa América 2024</strong>, and the Africa Cup of Nations <strong>2023</strong> (played Jan 2024) and <strong>2025</strong> (played Dec 2025) editions. Eighty-nine more in-scope games.</p>
+
+      <p>This was the unlock for the teams the model had been guessing at. Algeria, Egypt and Ivory Coast — three of the five remaining data-less sides — are AFCON regulars; Ivory Coast <em>won</em> the 2023 edition on home soil. Panama had played a full Copa América. Suddenly they all had real games. Only <strong>New Zealand</strong>, the lone Oceania qualifier whose opponents sit outside the top 50, was left rated by ranking alone.</p>
+
+      <p>And the payoff landed where it mattered most. On 261 games the in-sample calibration hit <strong>exactly 5.0%</strong> of results outside the 95% interval — the textbook target, and the very number Gelman's corrected 2014 model reported. The training set had finally grown into the model.</p>
+    </div>
+    <div>
+      <h4>What each tournament added</h4>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Source</th><th>In-scope games</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge badge-cont">EURO 2024</span></td><td class="td-num">40</td></tr>
+            <tr><td><span class="badge badge-cont">COPA 2024</span></td><td class="td-num">20</td></tr>
+            <tr><td><span class="badge badge-cont">AFCON 2023</span></td><td class="td-num">16</td></tr>
+            <tr><td><span class="badge badge-cont">AFCON 2025</span></td><td class="td-num">13</td></tr>
+            <tr><td class="td-team">Total added</td><td class="td-strong">89</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-n">261</span><span class="stat-label">Training games</span></div>
+        <div class="stat-pill"><span class="stat-n">5.0<small>%</small></span><span class="stat-label">Calibration</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Three versions, side by side</h3>
+  <div class="data-table-wrap">
+    <table>
+      <thead><tr><th>Version</th><th>Training data</th><th>Games</th><th>Prior-only</th><th>b</th><th>Calibration</th></tr></thead>
+      <tbody>
+        <tr><td><span class="version-tag">V1</span></td><td>2022 WC + qualifying, qualifiers only</td><td class="td-num">110</td><td class="td-num">9</td><td class="td-strong">1.24</td><td class="td-num">&mdash;</td></tr>
+        <tr><td><span class="version-tag">V2</span></td><td>+ in-scope filter &amp; real April-2025 ranking</td><td class="td-num">172</td><td class="td-num">5</td><td class="td-strong">0.86</td><td class="td-num">~3%</td></tr>
+        <tr><td><span class="version-tag">V3</span></td><td>+ Euro / Copa / AFCON finals</td><td class="td-num">261</td><td class="td-num">1</td><td class="td-strong">0.94</td><td class="td-strong">5.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:14px;color:var(--text-light)">A side effect worth noting: with Spain's Euro 2024 win and Argentina's Copa título now in the data, the model's title order shifted — Spain rose to favourite. Form, not just ranking, was finally being heard.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── DIXON-COLES -->
+<section id="dixoncoles">
+  <div class="section-number">05 &mdash; The draw problem, and a second model</div>
+  <h2>Modelling goals,<br>not gaps</h2>
+
+  <p class="lede">The Student-t model's one structural weakness was draws. A continuous distribution sliced at &plusmn;0.5 goals can only ever <em>approximate</em> the most common result in the sport. So we built a second model designed for it.</p>
+
+  <div class="two-col-wide">
+    <div>
+      <p>The <strong>Dixon-Coles double-Poisson</strong> model — the textbook answer, and the very fix flagged in the original's caveats — throws out the score <em>difference</em> and models the <strong>two scorelines</strong> directly. Each team gets an <strong>attack</strong> and a <strong>defence</strong> rating; home and away goals are independent Poisson draws, with a correction term <span class="td-strong">&tau;</span> that nudges probability into the low-scoring results (0–0, 1–0, 0–1, 1–1) where real football clusters.</p>
+
+      <p>The dependence parameter <span class="td-strong">&rho;</span> came out negative (&asymp; &minus;0.04), which is exactly what lifts the draw probability for evenly-matched sides. Brazil vs Morocco, a near-coin-flip, went from a 28% draw under the threshold to <strong>31%</strong> under Dixon-Coles — and the model now emits a most-likely <em>scoreline</em> for every fixture, not just W/D/L.</p>
+
+      <p>Two more things came for free. Modelling each scoreline let us add a real <strong>home-advantage</strong> term (worth about a 1.2&times; scoring boost), and separating attack from defence means a 3–2 win no longer looks identical to a 1–0. Same teams, same prior, same 261 games — a sharper lens.</p>
+    </div>
+    <div>
+      <div class="eq-block">
+        <div class="eq-label">Dixon-Coles joint scoreline</div>
+        <div class="eq">
+          P(x, y) = <span class="highlight">&tau;(x,y)</span> &middot; Pois(x | &lambda;<sub>h</sub>) &middot; Pois(y | &lambda;<sub>a</sub>)<br>
+          <span class="comment">&lambda; = exp(&mu;&#8320; + home + att &minus; def)</span><br><br>
+          &tau;(0,0) = 1 &minus; &lambda;<sub>h</sub>&lambda;<sub>a</sub>&rho;<br>
+          &tau;(1,1) = 1 &minus; &rho; &nbsp;<span class="comment">&rho;&lt;0 &rarr; more draws</span>
+        </div>
+      </div>
+      <div class="param-grid">
+        <div class="param-card"><div class="param-name">home_adv</div><div class="param-desc">Home scoring boost</div><div class="param-value">&asymp; 0.20  (~1.2&times;)</div></div>
+        <div class="param-card"><div class="param-name">&rho;</div><div class="param-desc">Low-score dependence</div><div class="param-value">&asymp; &minus;0.04</div></div>
+        <div class="param-card"><div class="param-name">b_att</div><div class="param-desc">Ranking &rarr; attack</div><div class="param-value">&asymp; 0.47</div></div>
+        <div class="param-card"><div class="param-name">b_def</div><div class="param-desc">Ranking &rarr; defence</div><div class="param-value">&asymp; 0.40</div></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>The same match, two lenses &mdash; Brazil vs Morocco</h3>
+  <div class="two-col">
+    <div>
+      <div class="prob-line">
+        <div class="pl-label"><span>Student-t (&plusmn;0.5 threshold)</span><span>37 / 28 / 35</span></div>
+        <div class="prob-bar"><div class="prob-seg seg-w1" style="width:37%">37</div><div class="prob-seg seg-draw" style="width:28%">28</div><div class="prob-seg seg-w2" style="width:35%">35</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="prob-line">
+        <div class="pl-label"><span>Dixon-Coles (scorelines)</span><span>35 / 31 / 35</span></div>
+        <div class="prob-bar"><div class="prob-seg seg-w1" style="width:35%">35</div><div class="prob-seg seg-draw" style="width:31%">31</div><div class="prob-seg seg-w2" style="width:34%">34</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:14px;color:var(--text-light)">Across all 72 fixtures the mean draw probability rises from 23.7% to 25.6% — concentrated, correctly, in the close games. Lopsided fixtures barely move.</p>
+</section>
+
+<!-- ─────────────────────────────────────────── SIMULATION -->
+<section id="simulation">
+  <div class="section-number">06 &mdash; Simulating the whole World Cup</div>
+  <h2>From one match<br>to one trophy</h2>
+
+  <div class="two-col-wide">
+    <div>
+      <p>Once a model emits scorelines, it can play the whole tournament. We ran <strong>10,000 simulated World Cups</strong>. Each one draws every group game from the Dixon-Coles distribution, builds all twelve tables under FIFA's real tie-breakers — <strong>points → goal difference → goals scored → head-to-head → drawing of lots</strong> — then takes the top two of each group plus the <strong>eight best third-placed teams</strong> into the new 32-team knockout.</p>
+
+      <p>The knockout runs on the <strong>official 2026 bracket</strong>, including the genuinely fiddly part: FIFA's allocation table that decides which group winner faces which qualifying third. Each tie is resolved as a single match, with a draw going to a coin-flip shootout, all the way to the final.</p>
+
+      <p>Two checks confirm the machinery: across the simulations exactly <strong>32 teams</strong> reach the knockout on average, and the championship probabilities sum to <strong>one</strong>. The result is a full distribution over outcomes — every team's odds of reaching the Round of 32, and of lifting the trophy.</p>
+
+      <div class="stat-row">
+        <div class="stat-pill"><span class="stat-n">10k</span><span class="stat-label">Tournaments</span></div>
+        <div class="stat-pill"><span class="stat-n">32</span><span class="stat-label">To knockout</span></div>
+        <div class="stat-pill"><span class="stat-n">104</span><span class="stat-label">Matches each</span></div>
+      </div>
+    </div>
+    <div>
+      <h4>Title odds &mdash; top contenders</h4>
+      <div class="ranking-chart">
+        <div class="rank-row"><div class="rank-team">Spain <small>&middot;2</small></div><div class="rank-bar-wrap"><div class="rank-bar gold" style="width:100%"></div></div><div class="rank-num">9.6%</div></div>
+        <div class="rank-row"><div class="rank-team">England <small>&middot;4</small></div><div class="rank-bar-wrap"><div class="rank-bar gold" style="width:90%"></div></div><div class="rank-num">8.6%</div></div>
+        <div class="rank-row"><div class="rank-team">France <small>&middot;3</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:79%"></div></div><div class="rank-num">7.6%</div></div>
+        <div class="rank-row"><div class="rank-team">Argentina <small>&middot;1</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:78%"></div></div><div class="rank-num">7.5%</div></div>
+        <div class="rank-row"><div class="rank-team">Portugal <small>&middot;7</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:58%"></div></div><div class="rank-num">5.6%</div></div>
+        <div class="rank-row"><div class="rank-team">Netherlands <small>&middot;6</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:53%"></div></div><div class="rank-num">5.1%</div></div>
+        <div class="rank-row"><div class="rank-team">Germany <small>&middot;10</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:51%"></div></div><div class="rank-num">4.9%</div></div>
+        <div class="rank-row"><div class="rank-team">Brazil <small>&middot;5</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:48%"></div></div><div class="rank-num">4.6%</div></div>
+        <div class="rank-row"><div class="rank-team">Colombia <small>&middot;14</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:42%"></div></div><div class="rank-num">4.0%</div></div>
+        <div class="rank-row"><div class="rank-team">Belgium <small>&middot;8</small></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:39%"></div></div><div class="rank-num">3.7%</div></div>
+      </div>
+      <p style="font-size:13px;color:var(--text-light)">At the other end, Haiti reach the Round of 32 only ~12% of the time; Ghana ~21%; New Zealand ~24%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── SCORING -->
+<section id="scoring">
+  <div class="section-number">07 &mdash; Playing the leaderboard</div>
+  <h2>The honest answer<br>is the optimal one</h2>
+
+  <p class="lede">The predictions feed a ranked prediction game: you enter percentages for each fixture, and as results come in you're scored. The rule looked arbitrary — until the maths revealed it was designed to reward telling the truth.</p>
+
+  <div class="two-col-wide">
+    <div>
+      <p>For each fixture you enter <span class="td-strong">(p&#8321;, p&#8332;, p&#8322;)</span>. When the result is known, you score 100 minus a quadratic penalty on the two percentages you assigned to the outcomes that <em>didn't</em> happen. A perfect 100% call scores 100; backing a single wrong outcome at 100% scores 0.</p>
+
+      <p>The interesting question for a model-builder: what should you <em>enter</em>? We checked by brute force — grid-searching every integer entry for the one that maximises expected score — and the answer, on every fixture, is the model's own probabilities. That quadratic cross-term <span class="td-strong">xy</span> is precisely what makes the rule <strong>strictly proper</strong>: honest reporting is optimal. No cleverness required — paste the model's numbers in.</p>
+
+      <p>That also lets us value strategies. If the model is right, an <strong>honest</strong> slate expects ~5,113 points across the 72 games. Going <strong>all-in</strong> on every favourite throws away ~1,250 of those expected points in exchange for triple the variance — a gamble that only makes sense when you're trailing and need the swing.</p>
+    </div>
+    <div>
+      <div class="eq-block">
+        <div class="eq-label">The scoring rule &mdash; strictly proper</div>
+        <div class="eq">
+          x, y = the two <span class="highlight">wrong</span> outcomes' %<br><br>
+          S = 100 &minus; (x&sup2; + y&sup2; + xy) / 100<br><br>
+          <span class="comment">argmax&#8345; E[S] = the true probabilities</span><br>
+          <span class="comment">&rarr; just enter the model's numbers</span>
+        </div>
+      </div>
+      <div class="data-table-wrap">
+        <table>
+          <thead><tr><th>Strategy</th><th>Exp. total</th><th>Std</th></tr></thead>
+          <tbody>
+            <tr><td class="td-team">Honest (= model)</td><td class="td-strong">5,113</td><td class="td-num">138</td></tr>
+            <tr><td>Over-confident (p&sup2;)</td><td class="td-num">4,967</td><td class="td-num">236</td></tr>
+            <tr><td>Uniform 34/33/33</td><td class="td-num">4,805</td><td class="td-num">4</td></tr>
+            <tr><td>All-in on favourite</td><td class="td-num">3,866</td><td class="td-num">410</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="pull-quote">
+    <p>"A proper scoring rule turns honesty into strategy. The best thing you can do is report exactly what you believe — which is the whole point of building the model in the first place."</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────── WHAT'S NEXT -->
+<section id="next">
+  <div class="section-number">08 &mdash; Reflections &amp; what's next</div>
+  <h2>What moved<br>the needle</h2>
+
+  <p class="lede">Across all of it, two changes mattered most — and neither was a cleverer algorithm. <strong>Data quality and quantity</strong> took calibration from rough to textbook. And <strong>matching the model to the question</strong> — goals, not gaps — fixed draws and unlocked the whole tournament simulation.</p>
+
+  <p>The arc is tidy: a 110-game model that leaned on rankings and shrugged at draws became a 261-game, two-model system that is well-calibrated, simulates the tournament end to end, and provably knows the best way to enter its own predictions. The same skeleton throughout — Gelman's hierarchical idea, FIFA rankings as a prior, Stan doing the sampling — just fed better and pointed at the right targets.</p>
+
+  <h4>Where it could go next</h4>
+  <ul class="caveat-list">
+    <li><span class="caveat-num">1</span><div class="caveat-text"><strong>Temporal decay.</strong> A 2022 result still counts as much as a 2026 one. Dixon-Coles' original paper down-weights older games exponentially — a one-line change to the likelihood that would let current form speak louder.</div></li>
+    <li><span class="caveat-num">2</span><div class="caveat-text"><strong>An independent prior.</strong> FIFA rankings are computed from the same results we train on, so the prior and the data partly double-count. Swapping in club-Elo-derived ratings would break that overlap.</div></li>
+    <li><span class="caveat-num">3</span><div class="caveat-text"><strong>Squad-level features.</strong> The model is blind to injuries, call-ups and form of individual players. Squad-average club ratings would be the most ambitious — and probably the most rewarding — extension of all.</div></li>
+  </ul>
+</section>
+
+</div><!-- /page -->
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">World Cup 2026 <span>Predictor &middot; Part II</span></div>
+    <div class="footer-meta">
+      Models: Gelman hierarchical Student-t &amp; Dixon-Coles double-Poisson<br>
+      Data: martj42/international_results &bull; Prior: real FIFA Ranking 3 Apr 2025 (API)<br>
+      261 training games &bull; 62-team universe &bull; 10,000 simulated tournaments
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
